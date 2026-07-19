@@ -1,0 +1,1678 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rishabh — Portfolio</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --pink: #f2a1c2;
+        --cyan: #00c8ff;
+        --black: #1a1a2e;
+        --red: #ff3b5c;
+        --white: #fafafa;
+        --lavender: #e8d5f5;
+        --sea: #0077b6;
+        --sky-top: #7ec8e3;
+        --sky-bottom: #c1e8ff;
+        --sand: #f5e6ca;
+        --green: #4caf50;
+      }
+
+      html,
+      body {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        font-family: 'Space Grotesk', sans-serif;
+        background: var(--black);
+      }
+
+      canvas {
+        display: block;
+      }
+
+      #loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--black);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        transition:
+          opacity 0.8s ease,
+          visibility 0.8s ease;
+      }
+
+      #loading-screen.hidden {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      #loading-screen h1 {
+        font-size: 3rem;
+        color: var(--white);
+        letter-spacing: 0.3em;
+        font-weight: 300;
+      }
+
+      #loading-bar-container {
+        width: 200px;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.1);
+        margin-top: 2rem;
+        border-radius: 1px;
+        overflow: hidden;
+      }
+
+      #loading-bar {
+        height: 100%;
+        width: 0%;
+        background: var(--cyan);
+        transition: width 0.3s ease;
+      }
+
+      #nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 1.5rem 3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+        mix-blend-mode: difference;
+      }
+
+      #nav .logo {
+        font-family: 'Space Mono', monospace;
+        font-size: 1.1rem;
+        color: var(--white);
+        letter-spacing: 0.15em;
+        font-weight: 700;
+      }
+
+      #nav .nav-links {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+      }
+
+      #nav .nav-links li {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        transition: color 0.3s;
+        font-family: 'Space Mono', monospace;
+      }
+
+      #nav .nav-links li:hover,
+      #nav .nav-links li.active {
+        color: var(--white);
+      }
+
+      #island-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 50;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #island-overlay.card-open {
+        pointer-events: auto;
+        background: rgba(0, 0, 0, 0.3);
+        transition: background 0.4s ease;
+      }
+
+      .island-content {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transform: translateY(40px);
+        transition:
+          opacity 0.6s ease,
+          transform 0.6s ease;
+        pointer-events: none;
+        padding: 6rem 4rem;
+      }
+
+      .island-content.visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      #click-island-hint {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        transition: opacity 0.5s;
+      }
+
+      #click-island-hint span {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      #click-island-hint .pulse-ring {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        animation: pulseRing 1.5s ease-in-out infinite;
+      }
+
+      @keyframes pulseRing {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.5;
+        }
+        50% {
+          transform: scale(1.5);
+          opacity: 1;
+        }
+      }
+
+      .content-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 3.5rem 4rem;
+        max-width: 720px;
+        width: 100%;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+      }
+
+      .content-card .tag {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--red);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .content-card .tag::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--red);
+        display: inline-block;
+      }
+
+      .content-card h2 {
+        font-size: 2.4rem;
+        font-weight: 700;
+        color: var(--black);
+        margin-bottom: 1.2rem;
+        line-height: 1.15;
+      }
+
+      .content-card p {
+        font-size: 1rem;
+        line-height: 1.75;
+        color: #555;
+        margin-bottom: 1rem;
+      }
+
+      .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+
+      .skill-item {
+        background: var(--black);
+        color: var(--white);
+        padding: 1rem 1.2rem;
+        border-radius: 14px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-align: center;
+        transition:
+          transform 0.2s,
+          background 0.2s;
+      }
+
+      .skill-item:nth-child(2n) {
+        background: var(--cyan);
+        color: var(--black);
+      }
+      .skill-item:nth-child(3n) {
+        background: var(--red);
+        color: var(--white);
+      }
+      .skill-item:nth-child(5n) {
+        background: var(--pink);
+        color: var(--black);
+      }
+
+      .skill-item:hover {
+        transform: translateY(-3px) scale(1.03);
+      }
+
+      .experience-list {
+        margin-top: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+      }
+
+      .exp-item {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+        padding: 1.2rem 1.5rem;
+        background: #f8f8fa;
+        border-radius: 16px;
+        transition: transform 0.2s;
+      }
+
+      .exp-item:hover {
+        transform: translateX(5px);
+      }
+
+      .exp-year {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.75rem;
+        color: var(--red);
+        white-space: nowrap;
+        padding-top: 2px;
+        font-weight: 700;
+      }
+
+      .exp-details h4 {
+        font-size: 1rem;
+        color: var(--black);
+        margin-bottom: 0.25rem;
+      }
+
+      .exp-details span {
+        font-size: 0.8rem;
+        color: #888;
+      }
+
+      .contact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+
+      .contact-item {
+        padding: 1.5rem;
+        border-radius: 16px;
+        background: #f8f8fa;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+      }
+
+      .contact-item:hover {
+        border-color: var(--cyan);
+        transform: translateY(-3px);
+        background: #fff;
+      }
+
+      .contact-item .contact-icon {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .contact-item h4 {
+        font-size: 0.85rem;
+        color: var(--black);
+        margin-bottom: 0.25rem;
+      }
+
+      .contact-item p {
+        font-size: 0.75rem;
+        color: #888;
+        margin: 0;
+      }
+
+      #scroll-hint {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        transition: opacity 0.5s;
+      }
+
+      #scroll-hint span {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      #scroll-hint .arrow {
+        width: 1px;
+        height: 30px;
+        background: rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+
+      #scroll-hint .arrow::after {
+        content: '';
+        position: absolute;
+        top: -100%;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--white);
+        animation: scrollArrow 1.5s ease-in-out infinite;
+      }
+
+      @keyframes scrollArrow {
+        0% {
+          top: -100%;
+        }
+        50% {
+          top: 100%;
+        }
+        100% {
+          top: 100%;
+        }
+      }
+
+      #progress {
+        position: fixed;
+        bottom: 2rem;
+        right: 3rem;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        align-items: center;
+      }
+
+      .progress-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        transition: all 0.4s;
+      }
+
+      .progress-dot.active {
+        background: var(--white);
+        box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+        transform: scale(1.3);
+      }
+
+      @media (max-width: 768px) {
+        .content-card {
+          padding: 2rem;
+        }
+        .content-card h2 {
+          font-size: 1.6rem;
+        }
+        .skills-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .contact-grid {
+          grid-template-columns: 1fr;
+        }
+        #nav {
+          padding: 1rem 1.5rem;
+        }
+        #nav .nav-links {
+          gap: 1rem;
+        }
+        #nav .nav-links li {
+          font-size: 0.7rem;
+        }
+        .island-content {
+          padding: 5rem 1.5rem 3rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loading-screen">
+      <h1>RISHABH</h1>
+      <div id="loading-bar-container"><div id="loading-bar"></div></div>
+    </div>
+
+    <nav id="nav">
+      <div class="logo">| Rishabh</div>
+      <ul class="nav-links">
+        <li data-island="0" class="active">About</li>
+        <li data-island="1">Skills</li>
+        <li data-island="2">Experience</li>
+        <li data-island="3">Contact</li>
+      </ul>
+    </nav>
+
+    <div id="island-overlay">
+      <div class="island-content" id="content-0">
+        <div class="content-card">
+          <div class="tag">About Me</div>
+          <h2>Creative developer crafting playful digital worlds.</h2>
+          <p>
+            Hi, I'm Rishabh — a multidisciplinary designer and developer based
+            in Barcelona. I blend bold colors, smooth motion, and clean code to
+            build experiences that feel alive.
+          </p>
+          <p>
+            My work sits at the intersection of art and technology. From
+            immersive 3D web experiences to vibrant brand identities, I believe
+            great design should make people smile.
+          </p>
+        </div>
+      </div>
+
+      <div class="island-content" id="content-1">
+        <div class="content-card">
+          <div class="tag">What I Do</div>
+          <h2>Tools & skills I bring to every project.</h2>
+          <div class="skills-grid">
+            <div class="skill-item">Three.js</div>
+            <div class="skill-item">React</div>
+            <div class="skill-item">WebGL</div>
+            <div class="skill-item">Figma</div>
+            <div class="skill-item">Motion Design</div>
+            <div class="skill-item">GLSL Shaders</div>
+            <div class="skill-item">TypeScript</div>
+            <div class="skill-item">Blender</div>
+            <div class="skill-item">Node.js</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="island-content" id="content-2">
+        <div class="content-card">
+          <div class="tag">Experience</div>
+          <h2>Places I've shaped pixels & pushed code.</h2>
+          <div class="experience-list">
+            <div class="exp-item">
+              <div class="exp-year">2024 –</div>
+              <div class="exp-details">
+                <h4>Senior Creative Developer</h4>
+                <span>Studio Particular · Barcelona</span>
+              </div>
+            </div>
+            <div class="exp-item">
+              <div class="exp-year">2022 – 24</div>
+              <div class="exp-details">
+                <h4>Interactive Developer</h4>
+                <span>Resn · Amsterdam</span>
+              </div>
+            </div>
+            <div class="exp-item">
+              <div class="exp-year">2020 – 22</div>
+              <div class="exp-details">
+                <h4>Frontend Engineer</h4>
+                <span>Active Theory · Los Angeles</span>
+              </div>
+            </div>
+            <div class="exp-item">
+              <div class="exp-year">2018 – 20</div>
+              <div class="exp-details">
+                <h4>Junior Developer</h4>
+                <span>Locomotive · Montréal</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="island-content" id="content-3">
+        <div class="content-card">
+          <div class="tag">Get in Touch</div>
+          <h2>Let's build something bright together.</h2>
+          <p>
+            Open to freelance collaborations, creative projects, and wild ideas.
+            Don't be shy — say hello!
+          </p>
+          <div class="contact-grid">
+            <div class="contact-item">
+              <div class="contact-icon">✉️</div>
+              <h4>Email</h4>
+              <p>hello@rishabh.studio</p>
+            </div>
+            <div class="contact-item">
+              <div class="contact-icon">🐦</div>
+              <h4>Twitter</h4>
+              <p>@rishabhcreates</p>
+            </div>
+            <div class="contact-item">
+              <div class="contact-icon">📐</div>
+              <h4>Dribbble</h4>
+              <p>rishabh.dribbble</p>
+            </div>
+            <div class="contact-item">
+              <div class="contact-icon">💻</div>
+              <h4>GitHub</h4>
+              <p>github/rishabh</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="click-island-hint">
+      <span>Click the island to begin</span>
+      <div class="pulse-ring"></div>
+    </div>
+
+    <div id="scroll-hint" style="display: none">
+      <span>Scroll to explore</span>
+      <div class="arrow"></div>
+    </div>
+
+    <div id="progress">
+      <div class="progress-dot active" data-island="0"></div>
+      <div class="progress-dot" data-island="1"></div>
+      <div class="progress-dot" data-island="2"></div>
+      <div class="progress-dot" data-island="3"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+      // ——— CONFIG ———
+      const ISLAND_COUNT = 4;
+      const COLORS = {
+        sky: [0x7ec8e3, 0xc1e8ff],
+        sea: [0x0077b6, 0x00b4d8],
+        sand: [0xf5e6ca, 0xe8d4b8],
+        green: [0x4caf50, 0x81c784, 0x388e3c],
+        pink: 0xf2a1c2,
+        cyan: 0x00c8ff,
+        red: 0xff3b5c,
+        lavender: 0xe8d5f5,
+        white: 0xfafafa,
+      };
+
+      let scene, camera, renderer, clock, raycaster, mouse;
+      let islands = [];
+      let currentIsland = 0;
+      let targetIsland = 0;
+      let scrollProgress = 0;
+      let targetScroll = 0;
+      let isAnimating = false;
+      let seaMesh, cloudGroup;
+      let loadProgress = 0;
+      let isOverview = true;
+      let scrollEnabled = false;
+      let cardOpen = false;
+      let signboards = [];
+      let pulseIslandGroup = null;
+      let glowRing = null;
+      let glowParticles = null;
+
+      // ——— INIT ———
+      function init() {
+        scene = new THREE.Scene();
+        clock = new THREE.Clock();
+
+        camera = new THREE.PerspectiveCamera(
+          55,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000,
+        );
+        camera.position.set(0, 35, 55);
+
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        document.body.appendChild(renderer.domElement);
+
+        createSky();
+        createSea();
+        createIslands();
+        createClouds();
+        createLights();
+
+        createIslandGlow();
+        simulateLoading();
+        setupEvents();
+        animate();
+      }
+
+      // ——— SKY ———
+      function createSky() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 2;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        const grad = ctx.createLinearGradient(0, 0, 0, 512);
+        grad.addColorStop(0, '#87CEEB');
+        grad.addColorStop(0.4, '#B0E0F6');
+        grad.addColorStop(0.7, '#D4EFFF');
+        grad.addColorStop(1, '#FFF5E6');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 2, 512);
+        const tex = new THREE.CanvasTexture(canvas);
+        scene.background = tex;
+      }
+
+      // ——— SEA ———
+      function createSea() {
+        const seaGeo = new THREE.PlaneGeometry(400, 400, 120, 120);
+        const seaMat = new THREE.MeshStandardMaterial({
+          color: 0x00a8cc,
+          metalness: 0.1,
+          roughness: 0.4,
+          transparent: true,
+          opacity: 0.88,
+        });
+        seaMesh = new THREE.Mesh(seaGeo, seaMat);
+        seaMesh.rotation.x = -Math.PI / 2;
+        seaMesh.position.y = -0.5;
+        seaMesh.receiveShadow = true;
+        scene.add(seaMesh);
+      }
+
+      function animateSea(t) {
+        if (!seaMesh) return;
+        const pos = seaMesh.geometry.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          const x = pos.getX(i);
+          const y = pos.getY(i);
+          const wave =
+            Math.sin(x * 0.08 + t * 0.8) * 0.3 +
+            Math.sin(y * 0.06 + t * 0.6) * 0.2 +
+            Math.sin((x + y) * 0.05 + t * 1.1) * 0.15;
+          pos.setZ(i, wave);
+        }
+        pos.needsUpdate = true;
+        seaMesh.geometry.computeVertexNormals();
+      }
+
+      // ——— ISLANDS ———
+      function createIslands() {
+        const positions = [
+          { x: 0, z: 0 },
+          { x: 35, z: -25 },
+          { x: -30, z: -55 },
+          { x: 20, z: -85 },
+        ];
+
+        const islandColors = [
+          COLORS.pink,
+          COLORS.cyan,
+          COLORS.red,
+          COLORS.lavender,
+        ];
+
+        positions.forEach((pos, i) => {
+          const group = new THREE.Group();
+          group.position.set(pos.x, 0, pos.z);
+
+          // base
+          const baseGeo = new THREE.CylinderGeometry(
+            5 + Math.random() * 2,
+            4,
+            2.5,
+            32,
+            4,
+          );
+          deformGeometry(baseGeo, 0.6);
+          const baseMat = new THREE.MeshStandardMaterial({
+            color: COLORS.sand[0],
+            roughness: 0.9,
+          });
+          const base = new THREE.Mesh(baseGeo, baseMat);
+          base.position.y = 0.5;
+          base.castShadow = true;
+          base.receiveShadow = true;
+          group.add(base);
+
+          // grass top
+          const grassGeo = new THREE.CylinderGeometry(
+            4.5 + Math.random() * 1.5,
+            5 + Math.random() * 2,
+            0.6,
+            32,
+          );
+          deformGeometry(grassGeo, 0.3);
+          const grassMat = new THREE.MeshStandardMaterial({
+            color:
+              COLORS.green[Math.floor(Math.random() * COLORS.green.length)],
+            roughness: 0.85,
+          });
+          const grass = new THREE.Mesh(grassGeo, grassMat);
+          grass.position.y = 1.9;
+          grass.castShadow = true;
+          group.add(grass);
+
+          // decorations
+          addIslandDecorations(group, i, islandColors[i]);
+
+          // signboard
+          const signboard = createSignboard(i);
+          group.add(signboard);
+
+          // signature element per island
+          addSignatureElement(group, i, islandColors[i]);
+
+          islands.push({
+            group,
+            position: pos,
+            lookAt: new THREE.Vector3(pos.x, 4, pos.z),
+            cameraPos: new THREE.Vector3(pos.x + 8, 8, pos.z + 14),
+          });
+
+          scene.add(group);
+        });
+      }
+
+      function deformGeometry(geo, amount) {
+        const pos = geo.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          pos.setX(i, pos.getX(i) + (Math.random() - 0.5) * amount);
+          pos.setZ(i, pos.getZ(i) + (Math.random() - 0.5) * amount);
+        }
+        geo.computeVertexNormals();
+      }
+
+      function addIslandDecorations(group, index, color) {
+        // palm trees
+        const treeCount = 2 + Math.floor(Math.random() * 3);
+        for (let t = 0; t < treeCount; t++) {
+          const tree = createPalmTree();
+          const angle = (t / treeCount) * Math.PI * 2 + Math.random() * 0.5;
+          const r = 1.5 + Math.random() * 2.5;
+          tree.position.set(Math.cos(angle) * r, 2, Math.sin(angle) * r);
+          tree.rotation.y = Math.random() * Math.PI * 2;
+          tree.scale.setScalar(0.7 + Math.random() * 0.5);
+          group.add(tree);
+        }
+
+        // color accent rocks
+        const rockCount = 3 + Math.floor(Math.random() * 3);
+        for (let r = 0; r < rockCount; r++) {
+          const rockGeo = new THREE.DodecahedronGeometry(
+            0.2 + Math.random() * 0.3,
+            0,
+          );
+          const rockMat = new THREE.MeshStandardMaterial({
+            color: Math.random() > 0.5 ? color : 0xcccccc,
+            roughness: 0.7,
+          });
+          const rock = new THREE.Mesh(rockGeo, rockMat);
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 2 + Math.random() * 3;
+          rock.position.set(
+            Math.cos(angle) * dist,
+            2.1,
+            Math.sin(angle) * dist,
+          );
+          rock.rotation.set(Math.random(), Math.random(), Math.random());
+          rock.castShadow = true;
+          group.add(rock);
+        }
+      }
+
+      function addSignatureElement(group, index, color) {
+        let element;
+        switch (index) {
+          case 0: // About — flag/banner
+            element = new THREE.Group();
+            const poleMat = new THREE.MeshStandardMaterial({
+              color: 0x8b4513,
+              roughness: 0.9,
+            });
+            const pole = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.06, 0.06, 4, 8),
+              poleMat,
+            );
+            pole.position.y = 4;
+            element.add(pole);
+            const flagGeo = new THREE.PlaneGeometry(1.5, 1, 8, 4);
+            const flagMat = new THREE.MeshStandardMaterial({
+              color,
+              side: THREE.DoubleSide,
+              roughness: 0.6,
+            });
+            const flag = new THREE.Mesh(flagGeo, flagMat);
+            flag.position.set(0.75, 5.2, 0);
+            flag.userData.isFlag = true;
+            element.add(flag);
+            element.position.set(0, 0, 0);
+            break;
+
+          case 1: // Skills — spinning shapes
+            element = new THREE.Group();
+            const shapes = [
+              new THREE.Mesh(
+                new THREE.OctahedronGeometry(0.5),
+                new THREE.MeshStandardMaterial({
+                  color: COLORS.cyan,
+                  metalness: 0.3,
+                }),
+              ),
+              new THREE.Mesh(
+                new THREE.TorusGeometry(0.4, 0.15, 8, 16),
+                new THREE.MeshStandardMaterial({
+                  color: COLORS.red,
+                  metalness: 0.3,
+                }),
+              ),
+              new THREE.Mesh(
+                new THREE.TetrahedronGeometry(0.4),
+                new THREE.MeshStandardMaterial({
+                  color: COLORS.pink,
+                  metalness: 0.3,
+                }),
+              ),
+            ];
+            shapes.forEach((s, j) => {
+              s.position.set(
+                Math.cos(j * 2.1) * 1.2,
+                4 + j * 0.8,
+                Math.sin(j * 2.1) * 1.2,
+              );
+              s.castShadow = true;
+              s.userData.spin = true;
+              s.userData.spinSpeed = 0.5 + Math.random() * 1;
+              element.add(s);
+            });
+            break;
+
+          case 2: // Experience — tower
+            element = new THREE.Group();
+            for (let l = 0; l < 4; l++) {
+              const blockGeo = new THREE.BoxGeometry(
+                0.8 - l * 0.05,
+                0.6,
+                0.8 - l * 0.05,
+              );
+              const blockMat = new THREE.MeshStandardMaterial({
+                color: [COLORS.red, COLORS.cyan, COLORS.pink, COLORS.lavender][
+                  l
+                ],
+                roughness: 0.5,
+              });
+              const block = new THREE.Mesh(blockGeo, blockMat);
+              block.position.y = 2.5 + l * 0.65;
+              block.rotation.y = l * 0.3;
+              block.castShadow = true;
+              element.add(block);
+            }
+            break;
+
+          case 3: // Contact — mailbox like structure
+            element = new THREE.Group();
+            const boxMat = new THREE.MeshStandardMaterial({
+              color: COLORS.lavender,
+              roughness: 0.5,
+            });
+            const mailbox = new THREE.Mesh(
+              new THREE.BoxGeometry(0.8, 1, 0.6),
+              boxMat,
+            );
+            mailbox.position.y = 3.5;
+            mailbox.castShadow = true;
+            element.add(mailbox);
+            const topGeo = new THREE.CylinderGeometry(
+              0.42,
+              0.42,
+              0.6,
+              16,
+              1,
+              false,
+              0,
+              Math.PI,
+            );
+            const top = new THREE.Mesh(topGeo, boxMat);
+            top.rotation.z = Math.PI / 2;
+            top.rotation.y = Math.PI / 2;
+            top.position.y = 4.28;
+            element.add(top);
+            const stickMat = new THREE.MeshStandardMaterial({
+              color: 0x8b4513,
+            });
+            const stick = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.05, 0.05, 1.5, 6),
+              stickMat,
+            );
+            stick.position.y = 2.5;
+            element.add(stick);
+            break;
+        }
+
+        if (element) {
+          group.add(element);
+        }
+      }
+
+      function createSignboard(index) {
+        const group = new THREE.Group();
+        const labels = ['ABOUT', 'SKILLS', 'EXPERIENCE', 'CONTACT'];
+        const boardColors = [
+          COLORS.pink,
+          COLORS.cyan,
+          COLORS.red,
+          COLORS.lavender,
+        ];
+
+        // post
+        const postMat = new THREE.MeshStandardMaterial({
+          color: 0x6b4226,
+          roughness: 0.9,
+        });
+        const post = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.06, 0.08, 2.5, 8),
+          postMat,
+        );
+        post.position.y = 3.3;
+        post.castShadow = true;
+        group.add(post);
+
+        // board
+        const boardGeo = new THREE.BoxGeometry(1.6, 0.8, 0.1);
+        const boardMat = new THREE.MeshStandardMaterial({
+          color: boardColors[index],
+          roughness: 0.5,
+        });
+        const board = new THREE.Mesh(boardGeo, boardMat);
+        board.position.set(0, 4.8, 0);
+        board.castShadow = true;
+        board.userData.isSignboard = true;
+        board.userData.islandIndex = index;
+        group.add(board);
+
+        // text on board using a canvas texture
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'transparent';
+        ctx.fillRect(0, 0, 256, 128);
+        ctx.fillStyle = '#1A1A2E';
+        ctx.font = 'bold 42px Space Grotesk, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(labels[index], 128, 64);
+        const tex = new THREE.CanvasTexture(canvas);
+        const labelGeo = new THREE.PlaneGeometry(1.5, 0.75);
+        const labelMat = new THREE.MeshBasicMaterial({
+          map: tex,
+          transparent: true,
+        });
+        const label = new THREE.Mesh(labelGeo, labelMat);
+        label.position.set(0, 4.8, 0.06);
+        group.add(label);
+
+        // position the signboard on the island
+        group.position.set(2.5, 0, 2);
+        group.rotation.y = -0.3;
+
+        signboards.push(board);
+
+        // give signboards wobble data
+        group.userData.isSignboardGroup = true;
+        group.userData.wobbleOffset = Math.random() * Math.PI * 2;
+
+        return group;
+      }
+
+      function createPalmTree() {
+        const tree = new THREE.Group();
+        // trunk
+        const trunkGeo = new THREE.CylinderGeometry(0.08, 0.15, 3, 8);
+        const trunkMat = new THREE.MeshStandardMaterial({
+          color: 0x8b6914,
+          roughness: 0.9,
+        });
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        trunk.position.y = 1.5;
+        trunk.rotation.z = (Math.random() - 0.5) * 0.2;
+        trunk.castShadow = true;
+        tree.add(trunk);
+
+        // leaves
+        for (let l = 0; l < 5; l++) {
+          const leafGeo = new THREE.PlaneGeometry(2, 0.4, 6, 1);
+          deformGeometry(leafGeo, 0.05);
+          const leafMat = new THREE.MeshStandardMaterial({
+            color: COLORS.green[0],
+            side: THREE.DoubleSide,
+            roughness: 0.8,
+          });
+          const leaf = new THREE.Mesh(leafGeo, leafMat);
+          const angle = (l / 5) * Math.PI * 2;
+          leaf.position.set(Math.cos(angle) * 0.7, 3.2, Math.sin(angle) * 0.7);
+          leaf.rotation.set(-0.5, angle, 0);
+          leaf.castShadow = true;
+          tree.add(leaf);
+        }
+        return tree;
+      }
+
+      // ——— CLOUDS ———
+      function createClouds() {
+        cloudGroup = new THREE.Group();
+        for (let i = 0; i < 20; i++) {
+          const cloud = createCloud();
+          cloud.position.set(
+            (Math.random() - 0.5) * 150,
+            15 + Math.random() * 20,
+            (Math.random() - 0.5) * 150,
+          );
+          cloud.scale.setScalar(1 + Math.random() * 2);
+          cloud.userData.speed = 0.3 + Math.random() * 0.5;
+          cloudGroup.add(cloud);
+        }
+        scene.add(cloudGroup);
+      }
+
+      function createCloud() {
+        const group = new THREE.Group();
+        const mat = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          roughness: 1,
+          transparent: true,
+          opacity: 0.85,
+        });
+        const count = 3 + Math.floor(Math.random() * 4);
+        for (let i = 0; i < count; i++) {
+          const s = 0.5 + Math.random() * 1;
+          const geo = new THREE.SphereGeometry(s, 12, 8);
+          const puff = new THREE.Mesh(geo, mat);
+          puff.position.set(
+            (Math.random() - 0.5) * 2,
+            Math.random() * 0.5,
+            (Math.random() - 0.5) * 1,
+          );
+          group.add(puff);
+        }
+        return group;
+      }
+
+      // ——— LIGHTS ———
+      // ——— GLOW RING + PARTICLES FOR FIRST ISLAND ———
+      function createIslandGlow() {
+        const island0Pos = islands[0].position;
+
+        // glowing ring
+        const ringGeo = new THREE.TorusGeometry(7.5, 0.12, 16, 100);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: 0x00c8ff,
+          transparent: true,
+          opacity: 0.6,
+        });
+        glowRing = new THREE.Mesh(ringGeo, ringMat);
+        glowRing.rotation.x = -Math.PI / 2;
+        glowRing.position.set(island0Pos.x, 2.2, island0Pos.z);
+        scene.add(glowRing);
+
+        // soft cyan point light at ring center
+        const glowLight = new THREE.PointLight(0x00c8ff, 2.5, 25, 2);
+        glowLight.position.set(island0Pos.x, 3, island0Pos.z);
+        glowLight.castShadow = false;
+        scene.add(glowLight);
+        glowRing.userData.glowLight = glowLight;
+
+        // outer softer ring
+        const outerRingGeo = new THREE.TorusGeometry(8.2, 0.3, 16, 100);
+        const outerRingMat = new THREE.MeshBasicMaterial({
+          color: 0x00c8ff,
+          transparent: true,
+          opacity: 0.15,
+        });
+        const outerRing = new THREE.Mesh(outerRingGeo, outerRingMat);
+        outerRing.rotation.x = -Math.PI / 2;
+        outerRing.position.set(island0Pos.x, 2.15, island0Pos.z);
+        glowRing.userData.outerRing = outerRing;
+        scene.add(outerRing);
+
+        // particle ring (small spheres orbiting)
+        glowParticles = new THREE.Group();
+        const particleCount = 24;
+        for (let i = 0; i < particleCount; i++) {
+          const size = 0.06 + Math.random() * 0.1;
+          const pGeo = new THREE.SphereGeometry(size, 8, 6);
+          const pMat = new THREE.MeshBasicMaterial({
+            color: Math.random() > 0.5 ? 0x00c8ff : 0xf2a1c2,
+            transparent: true,
+            opacity: 0.7 + Math.random() * 0.3,
+          });
+          const particle = new THREE.Mesh(pGeo, pMat);
+          const angle = (i / particleCount) * Math.PI * 2;
+          const radius = 7 + Math.random() * 1.5;
+          const height = 2.5 + Math.random() * 1.5;
+          particle.userData.orbitAngle = angle;
+          particle.userData.orbitRadius = radius;
+          particle.userData.orbitHeight = height;
+          particle.userData.orbitSpeed = 0.3 + Math.random() * 0.4;
+          particle.userData.bobSpeed = 1.5 + Math.random() * 2;
+          particle.userData.bobAmount = 0.2 + Math.random() * 0.4;
+          particle.position.set(
+            island0Pos.x + Math.cos(angle) * radius,
+            height,
+            island0Pos.z + Math.sin(angle) * radius,
+          );
+          glowParticles.add(particle);
+        }
+        scene.add(glowParticles);
+      }
+
+      function createLights() {
+        const amb = new THREE.AmbientLight(0xfff5e6, 0.6);
+        scene.add(amb);
+
+        const sun = new THREE.DirectionalLight(0xffe4b5, 1.4);
+        sun.position.set(30, 40, 20);
+        sun.castShadow = true;
+        sun.shadow.mapSize.set(2048, 2048);
+        sun.shadow.camera.near = 1;
+        sun.shadow.camera.far = 120;
+        sun.shadow.camera.left = -40;
+        sun.shadow.camera.right = 40;
+        sun.shadow.camera.top = 40;
+        sun.shadow.camera.bottom = -40;
+        sun.shadow.bias = -0.001;
+        scene.add(sun);
+
+        const fill = new THREE.DirectionalLight(0x87ceeb, 0.3);
+        fill.position.set(-20, 10, -10);
+        scene.add(fill);
+      }
+
+      // ——— CAMERA NAVIGATION ———
+      function getCameraState(index, progress) {
+        // overview state
+        const overview = {
+          pos: new THREE.Vector3(0, 22, 35),
+          lookAt: new THREE.Vector3(0, 0, -20),
+        };
+
+        if (
+          progress === 0 &&
+          index === 0 &&
+          targetIsland === 0 &&
+          !isAnimating
+        ) {
+          // Start overview
+        }
+
+        const island = islands[index];
+        return {
+          pos: island.cameraPos.clone(),
+          lookAt: island.lookAt.clone(),
+        };
+      }
+
+      function navigateToIsland(index) {
+        if (index < 0 || index >= ISLAND_COUNT || index === currentIsland)
+          return;
+        if (cardOpen) closeCard();
+        targetIsland = index;
+        isAnimating = true;
+
+        // hide current content
+        document
+          .querySelectorAll('.island-content')
+          .forEach((el) => el.classList.remove('visible'));
+
+        setTimeout(() => {
+          currentIsland = index;
+          isAnimating = false;
+          updateNav();
+        }, 800);
+      }
+
+      function enterExploreMode() {
+        if (!isOverview) return;
+        isOverview = false;
+        targetIsland = 0;
+        currentIsland = 0;
+        isAnimating = true;
+
+        document.getElementById('click-island-hint').style.opacity = '0';
+
+        setTimeout(() => {
+          scrollEnabled = true;
+          isAnimating = false;
+          updateNav();
+          const hint = document.getElementById('scroll-hint');
+          hint.style.display = 'flex';
+          hint.style.opacity = '1';
+        }, 1200);
+      }
+
+      function openCard(index) {
+        if (cardOpen) return;
+        cardOpen = true;
+        scrollEnabled = false;
+        document.getElementById(`content-${index}`).classList.add('visible');
+        document.getElementById('island-overlay').classList.add('card-open');
+      }
+
+      function closeCard() {
+        if (!cardOpen) return;
+        cardOpen = false;
+        scrollEnabled = true;
+        document
+          .querySelectorAll('.island-content')
+          .forEach((el) => el.classList.remove('visible'));
+        document.getElementById('island-overlay').classList.remove('card-open');
+      }
+
+      function updateNav() {
+        document.querySelectorAll('.nav-links li').forEach((li, i) => {
+          li.classList.toggle('active', i === currentIsland);
+        });
+        document.querySelectorAll('.progress-dot').forEach((dot, i) => {
+          dot.classList.toggle('active', i === currentIsland);
+        });
+      }
+
+      // ——— EVENTS ———
+      function setupEvents() {
+        let scrollCooldown = false;
+        window.addEventListener(
+          'wheel',
+          (e) => {
+            if (
+              !scrollEnabled ||
+              scrollCooldown ||
+              isAnimating ||
+              cardOpen ||
+              isOverview
+            )
+              return;
+            scrollCooldown = true;
+            setTimeout(() => (scrollCooldown = false), 1000);
+
+            if (e.deltaY > 0 && currentIsland < ISLAND_COUNT - 1) {
+              navigateToIsland(currentIsland + 1);
+            } else if (e.deltaY < 0 && currentIsland > 0) {
+              navigateToIsland(currentIsland - 1);
+            }
+
+            document.getElementById('scroll-hint').style.opacity = '0';
+          },
+          { passive: true },
+        );
+
+        // touch
+        let touchStartY = 0;
+        window.addEventListener(
+          'touchstart',
+          (e) => {
+            touchStartY = e.touches[0].clientY;
+          },
+          { passive: true },
+        );
+        window.addEventListener(
+          'touchend',
+          (e) => {
+            if (!scrollEnabled || isAnimating || cardOpen || isOverview) return;
+            const diff = touchStartY - e.changedTouches[0].clientY;
+            if (Math.abs(diff) > 50) {
+              if (diff > 0 && currentIsland < ISLAND_COUNT - 1)
+                navigateToIsland(currentIsland + 1);
+              else if (diff < 0 && currentIsland > 0)
+                navigateToIsland(currentIsland - 1);
+            }
+            document.getElementById('scroll-hint').style.opacity = '0';
+          },
+          { passive: true },
+        );
+
+        // keyboard
+        window.addEventListener('keydown', (e) => {
+          if (cardOpen && e.key === 'Escape') {
+            closeCard();
+            return;
+          }
+          if (!scrollEnabled || isAnimating || cardOpen || isOverview) return;
+          if (
+            (e.key === 'ArrowDown' || e.key === 'ArrowRight') &&
+            currentIsland < ISLAND_COUNT - 1
+          ) {
+            navigateToIsland(currentIsland + 1);
+          } else if (
+            (e.key === 'ArrowUp' || e.key === 'ArrowLeft') &&
+            currentIsland > 0
+          ) {
+            navigateToIsland(currentIsland - 1);
+          }
+        });
+
+        // nav clicks
+        document.querySelectorAll('.nav-links li').forEach((li) => {
+          li.addEventListener('click', () => {
+            if (isOverview) return;
+            navigateToIsland(parseInt(li.dataset.island));
+          });
+        });
+        document.querySelectorAll('.progress-dot').forEach((dot) => {
+          dot.addEventListener('click', () => {
+            if (isOverview) return;
+            navigateToIsland(parseInt(dot.dataset.island));
+          });
+        });
+
+        // click to enter explore & click signboards
+        window.addEventListener('click', (e) => {
+          // close card if clicking overlay background
+          if (cardOpen) {
+            const overlay = document.getElementById('island-overlay');
+            if (e.target === overlay || !e.target.closest('.content-card')) {
+              closeCard();
+            }
+            return;
+          }
+
+          mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+          mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+          raycaster.setFromCamera(mouse, camera);
+
+          if (isOverview) {
+            // check if clicked the first island
+            const hits = raycaster.intersectObjects(
+              islands[0].group.children,
+              true,
+            );
+            if (hits.length > 0) {
+              enterExploreMode();
+            }
+            return;
+          }
+
+          // check signboard clicks
+          const signHits = raycaster.intersectObjects(signboards, false);
+          if (signHits.length > 0) {
+            const hit = signHits[0].object;
+            if (
+              hit.userData.isSignboard &&
+              hit.userData.islandIndex === currentIsland
+            ) {
+              openCard(currentIsland);
+            }
+          }
+        });
+
+        // change cursor on hover over clickable elements
+        window.addEventListener('mousemove', (e) => {
+          mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+          mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+          raycaster.setFromCamera(mouse, camera);
+
+          let hovering = false;
+          if (isOverview) {
+            const hits = raycaster.intersectObjects(
+              islands[0].group.children,
+              true,
+            );
+            hovering = hits.length > 0;
+          } else if (!cardOpen) {
+            const signHits = raycaster.intersectObjects(signboards, false);
+            if (signHits.length > 0) {
+              const hit = signHits[0].object;
+              hovering = hit.userData.islandIndex === currentIsland;
+            }
+          }
+          renderer.domElement.style.cursor = hovering ? 'pointer' : 'default';
+        });
+
+        window.addEventListener('resize', () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+      }
+
+      // ——— LOADING ———
+      function simulateLoading() {
+        const bar = document.getElementById('loading-bar');
+        const screen = document.getElementById('loading-screen');
+        let p = 0;
+        const interval = setInterval(() => {
+          p += Math.random() * 15 + 5;
+          if (p >= 100) {
+            p = 100;
+            bar.style.width = '100%';
+            clearInterval(interval);
+            setTimeout(() => {
+              screen.classList.add('hidden');
+              // start in overview — no card visible
+            }, 500);
+          } else {
+            bar.style.width = p + '%';
+          }
+        }, 150);
+      }
+
+      // ——— ANIMATE ———
+      function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+
+        animateSea(t);
+
+        // animate clouds
+        if (cloudGroup) {
+          cloudGroup.children.forEach((c) => {
+            c.position.x += c.userData.speed * 0.01;
+            if (c.position.x > 80) c.position.x = -80;
+          });
+        }
+
+        // animate island decorations
+        islands.forEach((island) => {
+          island.group.children.forEach((child) => {
+            if (child.userData && child.userData.isFlag) {
+              // flag wave
+              const pos = child.geometry.attributes.position;
+              for (let i = 0; i < pos.count; i++) {
+                const x = pos.getX(i);
+                pos.setZ(i, Math.sin(x * 3 + t * 3) * 0.1);
+              }
+              pos.needsUpdate = true;
+            }
+          });
+
+          // spin objects
+          island.group.traverse((obj) => {
+            if (obj.userData && obj.userData.spin) {
+              obj.rotation.x += 0.01 * obj.userData.spinSpeed;
+              obj.rotation.y += 0.015 * obj.userData.spinSpeed;
+              obj.position.y +=
+                Math.sin(t * 2 + obj.userData.spinSpeed) * 0.002;
+            }
+          });
+
+          // gentle bob
+          island.group.position.y =
+            Math.sin(t * 0.5 + islands.indexOf(island) * 1.5) * 0.15;
+        });
+
+        // pulse first island in overview
+        if (isOverview && islands[0]) {
+          const pulse = 1 + Math.sin(t * 3) * 0.04;
+          islands[0].group.scale.setScalar(pulse);
+        } else if (islands[0] && !isOverview) {
+          islands[0].group.scale.setScalar(1);
+        }
+
+        // animate glow ring + particles (overview only)
+        if (glowRing) {
+          const glowTarget = isOverview ? 1 : 0;
+          glowRing.material.opacity +=
+            (glowTarget * 0.6 - glowRing.material.opacity) * 0.05;
+          glowRing.userData.outerRing.material.opacity +=
+            (glowTarget * 0.15 - glowRing.userData.outerRing.material.opacity) *
+            0.05;
+
+          if (isOverview) {
+            // breathe the ring
+            const ringScale = 1 + Math.sin(t * 2) * 0.05;
+            glowRing.scale.set(ringScale, ringScale, 1);
+            glowRing.userData.outerRing.scale.set(
+              ringScale * 1.02,
+              ringScale * 1.02,
+              1,
+            );
+            glowRing.position.y = 2.2 + Math.sin(t * 0.5) * 0.15;
+            glowRing.userData.outerRing.position.y =
+              2.15 + Math.sin(t * 0.5) * 0.15;
+            glowRing.rotation.z = t * 0.15;
+          }
+
+          // hide/show
+          // animate point light intensity with overview state
+          if (glowRing.userData.glowLight) {
+            const lightTarget = isOverview ? 2.5 : 0;
+            glowRing.userData.glowLight.intensity +=
+              (lightTarget - glowRing.userData.glowLight.intensity) * 0.05;
+            glowRing.userData.glowLight.position.y =
+              3 + Math.sin(t * 0.5) * 0.15;
+            if (isOverview) {
+              // subtle pulsing
+              glowRing.userData.glowLight.intensity =
+                lightTarget + Math.sin(t * 2) * 0.6;
+            }
+          }
+
+          glowRing.visible = glowRing.material.opacity > 0.01;
+          glowRing.userData.outerRing.visible = glowRing.visible;
+        }
+
+        if (glowParticles) {
+          const pTarget = isOverview ? 1 : 0;
+          const island0Pos = islands[0].position;
+          glowParticles.children.forEach((p) => {
+            p.material.opacity +=
+              (pTarget * (0.7 + Math.random() * 0.01) - p.material.opacity) *
+              0.05;
+            p.visible = p.material.opacity > 0.01;
+
+            if (isOverview) {
+              p.userData.orbitAngle += p.userData.orbitSpeed * 0.008;
+              p.position.x =
+                island0Pos.x +
+                Math.cos(p.userData.orbitAngle) * p.userData.orbitRadius;
+              p.position.z =
+                island0Pos.z +
+                Math.sin(p.userData.orbitAngle) * p.userData.orbitRadius;
+              p.position.y =
+                p.userData.orbitHeight +
+                Math.sin(t * p.userData.bobSpeed) * p.userData.bobAmount +
+                Math.sin(t * 0.5) * 0.15;
+            }
+          });
+        }
+
+        // wobble/bounce signboard groups — intensify on current island
+        islands.forEach((island, idx) => {
+          island.group.traverse((child) => {
+            if (child.userData && child.userData.isSignboardGroup) {
+              const wobbleSpeed = isOverview ? 0 : 1;
+              const isCurrent = !isOverview && idx === currentIsland ? 1 : 0;
+
+              // lerp stored intensity for smooth transition
+              if (child.userData._wobbleIntensity === undefined)
+                child.userData._wobbleIntensity = 0;
+              const targetIntensity = isCurrent ? 1.8 : 1;
+              child.userData._wobbleIntensity +=
+                (targetIntensity - child.userData._wobbleIntensity) * 0.05;
+              const intensity = child.userData._wobbleIntensity;
+
+              const wobbleT =
+                t * (isCurrent ? 3.2 : 2.5) + child.userData.wobbleOffset;
+              child.rotation.z =
+                Math.sin(wobbleT) * 0.06 * wobbleSpeed * intensity;
+              child.rotation.x =
+                Math.cos(wobbleT * 0.7) * 0.03 * wobbleSpeed * intensity;
+              // gentle vertical bounce — bigger on current island
+              const baseY = 0;
+              child.position.y =
+                baseY +
+                Math.sin(wobbleT * 1.2) * 0.08 * wobbleSpeed * intensity;
+            }
+          });
+        });
+
+        // smooth camera transition
+        let targetPos, targetLook;
+
+        if (isOverview) {
+          targetPos = new THREE.Vector3(5, 35, 55);
+          targetLook = new THREE.Vector3(0, 0, -25);
+        } else {
+          const target = islands[targetIsland];
+          targetPos = target.cameraPos;
+          targetLook = target.lookAt;
+        }
+
+        camera.position.lerp(targetPos, 0.025);
+
+        const currentLook = new THREE.Vector3();
+        camera.getWorldDirection(currentLook);
+        currentLook.multiplyScalar(10).add(camera.position);
+        currentLook.lerp(targetLook, 0.03);
+        camera.lookAt(currentLook);
+
+        renderer.render(scene, camera);
+      }
+
+      init();
+    </script>
+  </body>
+</html>
