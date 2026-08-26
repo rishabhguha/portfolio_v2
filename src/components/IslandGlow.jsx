@@ -1,8 +1,9 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
+import { ENTRY_ISLAND } from '../config/islands.js'
 
-const ISLAND0_POS = { x: 0, z: 0 }
+// the glow always sits on the entry island, which is what overview mode frames
+const ISLAND0_POS = ENTRY_ISLAND.position
 
 export default function IslandGlow({ isOverview }) {
   const ringRef = useRef()

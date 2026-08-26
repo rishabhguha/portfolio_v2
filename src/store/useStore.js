@@ -1,6 +1,12 @@
 import { create } from 'zustand'
+import { ENTRY_ISLAND_INDEX, LAST_ISLAND } from '../config/islands.js'
+import { FLIGHT_MS, SETTLE_MS } from '../config/timings.js'
 
-const useStore = create((set) => ({
+// single managed settle timer — starting a new flight cancels the pending one,
+// so a stale timeout can never finalise the wrong island or unlock input early
+let settleTimer = null
+
+const useStore = create((set, get) => ({
   // whether we are in the top-down overview or island-level explore mode
   isOverview: true,
   // the island that is currently in focus (finalised after animation)
@@ -24,26 +30,31 @@ const useStore = create((set) => ({
   setIsAnimating: (v) => set({ isAnimating: v }),
   setLoaded: (v) => set({ loaded: v }),
 
-  // composite action: leave overview mode and fly to island 0
+  // composite action: leave overview mode and fly to the entry island
   enterExploreMode: () => {
-    set({ isOverview: false, targetIsland: 0, currentIsland: 0, isAnimating: true })
-    setTimeout(() => {
+    clearTimeout(settleTimer)
+    set({
+      isOverview: false,
+      targetIsland: ENTRY_ISLAND_INDEX,
+      currentIsland: ENTRY_ISLAND_INDEX,
+      isAnimating: true,
+    })
+    settleTimer = setTimeout(() => {
       set({ scrollEnabled: true, isAnimating: false })
-    }, 1200)
+    }, FLIGHT_MS)
   },
 
   // composite action: navigate to a specific island index
   navigateToIsland: (index) => {
-    set((state) => {
-      if (index < 0 || index > 3 || index === state.currentIsland) return {}
-      return { targetIsland: index, isAnimating: true, cardOpen: false, scrollEnabled: false }
-    })
-    setTimeout(() => {
+    if (index < 0 || index > LAST_ISLAND || index === get().targetIsland) return
+    clearTimeout(settleTimer)
+    set({ targetIsland: index, isAnimating: true, cardOpen: false, scrollEnabled: false })
+    settleTimer = setTimeout(() => {
       set({ currentIsland: index, isAnimating: false, scrollEnabled: true })
-    }, 2200)
+    }, SETTLE_MS)
   },
 
-  openCard: (index) => set({ cardOpen: true, scrollEnabled: false }),
+  openCard: () => set({ cardOpen: true, scrollEnabled: false }),
   closeCard: () => set({ cardOpen: false, scrollEnabled: true }),
 }))
 

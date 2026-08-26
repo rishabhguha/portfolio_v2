@@ -2,13 +2,27 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
-const BOARD_COLORS = [0xf2a1c2, 0x00c8ff, 0xff3b5c, 0xe8d5f5]
-const LABELS = ['ABOUT', 'SKILLS', 'EXPERIENCE', 'CONTACT']
+// The signboard's post is modelled so its base sits at this Y in island-group
+// space (post centre 3.3, half-height 1.25). A themed island whose surface is
+// at a different height passes its `surfaceY`; the outer anchor group shifts
+// the whole board so the post always meets the ground.
+const SIGN_BASE_Y = 2.05
 
-export default function Signboard({ islandIndex, currentIsland, isOverview, onSignboardClick }) {
+export default function Signboard({
+  label,
+  color,
+  isCurrent,
+  isOverview,
+  onSignboardClick,
+  surfaceY = SIGN_BASE_Y,
+}) {
   const groupRef = useRef()
-  const wobbleOffset = useMemo(() => Math.random() * Math.PI * 2, [])
-  const wobbleIntensityRef = useRef(0)
+  // phase accumulates per-frame so speed changes bend the wobble instead of
+  // snapping it — multiplying absolute clock time by a changing frequency
+  // teleports the phase whenever isCurrent flips
+  const phaseRef = useRef(Math.random() * Math.PI * 2)
+  const ampRef = useRef(0)
+  const intensityRef = useRef(1)
 
   const labelTexture = useMemo(() => {
     const canvas = document.createElement('canvas')
@@ -20,63 +34,57 @@ export default function Signboard({ islandIndex, currentIsland, isOverview, onSi
     ctx.font = 'bold 42px Space Grotesk, sans-serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText(LABELS[islandIndex], 128, 64)
-    const tex = new THREE.CanvasTexture(canvas)
-    return tex
-  }, [islandIndex])
+    ctx.fillText(label.toUpperCase(), 128, 64)
+    return new THREE.CanvasTexture(canvas)
+  }, [label])
 
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime()
+  useFrame((_, delta) => {
     const group = groupRef.current
     if (!group) return
 
-    const wobbleSpeed = isOverview ? 0 : 1
-    const isCurrent = !isOverview && islandIndex === currentIsland ? 1 : 0
-    const targetIntensity = isCurrent ? 1.8 : 1
-    wobbleIntensityRef.current +=
-      (targetIntensity - wobbleIntensityRef.current) * 0.05
-    const intensity = wobbleIntensityRef.current
+    phaseRef.current += delta * (isCurrent ? 3.2 : 2.5)
 
-    const wobbleT = t * (isCurrent ? 3.2 : 2.5) + wobbleOffset
-    group.rotation.z = Math.sin(wobbleT) * 0.06 * wobbleSpeed * intensity
-    group.rotation.x = Math.cos(wobbleT * 0.7) * 0.03 * wobbleSpeed * intensity
-    group.position.y = Math.sin(wobbleT * 1.2) * 0.08 * wobbleSpeed * intensity
+    // frame-rate-independent damping toward the current targets
+    ampRef.current = THREE.MathUtils.damp(ampRef.current, isOverview ? 0 : 1, 3, delta)
+    intensityRef.current = THREE.MathUtils.damp(intensityRef.current, isCurrent ? 1.8 : 1, 3, delta)
+
+    const w = phaseRef.current
+    const a = ampRef.current * intensityRef.current
+    group.rotation.z = Math.sin(w) * 0.06 * a
+    group.rotation.x = Math.cos(w * 0.7) * 0.03 * a
+    group.position.y = Math.sin(w * 1.2) * 0.08 * a
   })
 
-  const boardColor = BOARD_COLORS[islandIndex]
-
   return (
-    <group
-      ref={groupRef}
-      position={[2.5, 0, 2]}
-      rotation={[0, -0.3, 0]}
-    >
-      {/* post */}
-      <mesh position={[0, 3.3, 0]} castShadow>
+    // outer group anchors the board on the island surface; the inner (ref'd)
+    // group owns the wobble, which overwrites position.y every frame
+    <group position={[2.5, surfaceY - SIGN_BASE_Y, 2]}>
+      <group ref={groupRef} rotation={[0, -0.3, 0]}>
+        {/* post */}
+        <mesh position={[0, 3.3, 0]} castShadow>
         <cylinderGeometry args={[0.06, 0.08, 2.5, 8]} />
         <meshStandardMaterial color={0x6b4226} roughness={0.9} />
       </mesh>
 
-      {/* board — clickable */}
+      {/* board — clickable while its island is the current one */}
       <mesh
         position={[0, 4.8, 0]}
         castShadow
         onClick={(e) => {
           e.stopPropagation()
-          if (islandIndex === currentIsland && !isOverview) {
-            onSignboardClick(islandIndex)
-          }
+          if (isCurrent) onSignboardClick()
         }}
       >
         <boxGeometry args={[1.6, 0.8, 0.1]} />
-        <meshStandardMaterial color={boardColor} roughness={0.5} />
+        <meshStandardMaterial color={color} roughness={0.5} />
       </mesh>
 
-      {/* canvas label */}
-      <mesh position={[0, 4.8, 0.06]}>
-        <planeGeometry args={[1.5, 0.75]} />
-        <meshBasicMaterial map={labelTexture} transparent />
-      </mesh>
+        {/* canvas label */}
+        <mesh position={[0, 4.8, 0.06]}>
+          <planeGeometry args={[1.5, 0.75]} />
+          <meshBasicMaterial map={labelTexture} transparent />
+        </mesh>
+      </group>
     </group>
   )
 }

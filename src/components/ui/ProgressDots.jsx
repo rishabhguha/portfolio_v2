@@ -1,4 +1,5 @@
 import useStore from '../../store/useStore.js'
+import { ISLANDS } from '../../config/islands.js'
 
 export default function ProgressDots() {
   const currentIsland = useStore((s) => s.currentIsland)
@@ -9,9 +10,9 @@ export default function ProgressDots() {
 
   return (
     <div className="progress">
-      {[0, 1, 2, 3].map((i) => (
+      {ISLANDS.map((island, i) => (
         <div
-          key={i}
+          key={island.id}
           className={`progress-dot${currentIsland === i ? ' active' : ''}`}
           onClick={() => navigateToIsland(i)}
         />

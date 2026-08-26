@@ -1,6 +1,5 @@
 import useStore from '../../store/useStore.js'
-
-const NAV_ITEMS = ['About', 'Skills', 'Experience', 'Contact']
+import { ISLANDS } from '../../config/islands.js'
 
 export default function Nav() {
   const currentIsland = useStore((s) => s.currentIsland)
@@ -11,15 +10,15 @@ export default function Nav() {
     <nav className="nav">
       <div className="nav-logo">| Rishabh</div>
       <ul className="nav-links">
-        {NAV_ITEMS.map((label, i) => (
+        {ISLANDS.map((island, i) => (
           <li
-            key={i}
+            key={island.id}
             className={!isOverview && currentIsland === i ? 'active' : ''}
             onClick={() => {
               if (!isOverview) navigateToIsland(i)
             }}
           >
-            {label}
+            {island.label}
           </li>
         ))}
       </ul>

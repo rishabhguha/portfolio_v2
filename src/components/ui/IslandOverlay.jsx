@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import useStore from '../../store/useStore.js'
+import { ISLANDS } from '../../config/islands.js'
 
 function AboutCard() {
   return (
@@ -93,7 +94,14 @@ function ContactCard() {
   )
 }
 
-const CARDS = [AboutCard, SkillsCard, ExperienceCard, ContactCard]
+// keyed by island id rather than array position, so card order can never drift
+// out of sync with the island config
+const CARDS = {
+  about: AboutCard,
+  skills: SkillsCard,
+  experience: ExperienceCard,
+  contact: ContactCard,
+}
 
 export default function IslandOverlay() {
   const cardOpen = useStore((s) => s.cardOpen)
@@ -114,13 +122,17 @@ export default function IslandOverlay() {
 
   return (
     <div className={`island-overlay${cardOpen ? ' card-open' : ''}`}>
-      {CARDS.map((Card, i) => (
-        <div key={i} className={`island-content${cardOpen && currentIsland === i ? ' visible' : ''}`}>
-          <div ref={cardOpen && currentIsland === i ? cardRef : null}>
-            <Card />
+      {ISLANDS.map((island, i) => {
+        const Card = CARDS[island.id]
+        const isActive = cardOpen && currentIsland === i
+        return (
+          <div key={island.id} className={`island-content${isActive ? ' visible' : ''}`}>
+            <div ref={isActive ? cardRef : null}>
+              <Card />
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

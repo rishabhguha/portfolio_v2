@@ -1,48 +1,69 @@
-import { useRef } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import * as THREE from 'three';
-import { ISLAND_POSITIONS } from './Islands.jsx';
+import { useRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import * as THREE from 'three'
+import { ISLANDS } from '../config/islands.js'
+import { FLIGHT_MS } from '../config/timings.js'
+import { CAMERA_OFFSET, CAMERA_LOOKAT_Y } from '../config/camera.js'
 
-const OVERVIEW_POS = new THREE.Vector3(5, 22, 30);
-const OVERVIEW_LOOKAT = new THREE.Vector3(0, 0, -15);
+const OVERVIEW_POS = new THREE.Vector3(5, 22, 30)
+const OVERVIEW_LOOKAT = new THREE.Vector3(0, 0, -15)
 
-function getIslandCamera(index) {
-  const pos = ISLAND_POSITIONS[index];
-  return {
-    position: new THREE.Vector3(pos.x + 8, 8, pos.z + 14),
-    lookAt: new THREE.Vector3(pos.x, 4, pos.z),
-  };
-}
+// precomputed per-island camera framing, derived from the island config
+const ISLAND_CAMERAS = ISLANDS.map(({ position }) => ({
+  position: new THREE.Vector3(
+    position.x + CAMERA_OFFSET.x,
+    CAMERA_OFFSET.y,
+    position.z + CAMERA_OFFSET.z,
+  ),
+  lookAt: new THREE.Vector3(position.x, CAMERA_LOOKAT_Y, position.z),
+}))
+
+const easeInOutCubic = (t) =>
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3)
+
+const LOOK = new THREE.Vector3()
 
 export default function CameraController({ isOverview, targetIsland }) {
-  const { camera } = useThree();
-  const currentLookAt = useRef(OVERVIEW_LOOKAT.clone());
+  const { camera } = useThree()
+  const destKey = useRef(null)
+  const flight = useRef(null)
 
   useFrame(() => {
-    let targetPos, targetLook;
+    const key = isOverview ? 'overview' : targetIsland
 
-    if (isOverview) {
-      targetPos = OVERVIEW_POS;
-      targetLook = OVERVIEW_LOOKAT;
-    } else {
-      const cam = getIslandCamera(targetIsland);
-      targetPos = cam.position;
-      targetLook = cam.lookAt;
+    // destination changed → start a new flight from wherever the camera is now
+    if (destKey.current !== key) {
+      const dest = isOverview
+        ? { position: OVERVIEW_POS, lookAt: OVERVIEW_LOOKAT }
+        : ISLAND_CAMERAS[targetIsland]
+      const fromLook = new THREE.Vector3()
+      camera.getWorldDirection(fromLook).multiplyScalar(10).add(camera.position)
+      flight.current = {
+        fromPos: camera.position.clone(),
+        fromLook,
+        toPos: dest.position,
+        toLook: dest.lookAt,
+        startedAt: performance.now(),
+        // a redirect mid-flight already has momentum, so only ease out;
+        // a flight from rest gets the full ease-in-out
+        ease: flight.current ? easeOutCubic : easeInOutCubic,
+      }
+      destKey.current = key
     }
 
-    camera.position.lerp(targetPos, 0.02);
+    if (!flight.current) return // landed — leave the camera perfectly still
 
-    // smooth look-at interpolation
-    const worldDir = new THREE.Vector3();
-    camera.getWorldDirection(worldDir);
-    const currentLookPos = worldDir.multiplyScalar(10).add(camera.position);
-    currentLookPos.lerp(targetLook, 0.02);
+    const f = flight.current
+    const t = Math.min((performance.now() - f.startedAt) / FLIGHT_MS, 1)
+    const k = f.ease(t)
 
-    camera.lookAt(currentLookPos);
+    camera.position.lerpVectors(f.fromPos, f.toPos, k)
+    camera.lookAt(LOOK.lerpVectors(f.fromLook, f.toLook, k))
 
-    // keep track for next frame
-    currentLookAt.current.copy(currentLookPos);
-  });
+    // exact arrival: snap done, stop touching the camera so nothing can drift
+    if (t === 1) flight.current = null
+  })
 
-  return null;
+  return null
 }
