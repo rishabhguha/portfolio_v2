@@ -25,10 +25,14 @@ export default function Scene() {
   // shared gate for every navigation input
   const canNavigate = scrollEnabled && !isAnimating && !cardOpen && !isOverview;
 
+  // returns true only if the step lands on a real island — a no-op at the
+  // boundary reports false so callers don't consume the input (see wheel cooldown)
   const step = useCallback(
     (delta) => {
       const next = currentIsland + delta;
-      if (next >= 0 && next <= LAST_ISLAND) navigateToIsland(next);
+      if (next < 0 || next > LAST_ISLAND) return false;
+      navigateToIsland(next);
+      return true;
     },
     [currentIsland, navigateToIsland],
   );
@@ -57,9 +61,11 @@ export default function Scene() {
     let cooldown = false;
     const onWheel = (e) => {
       if (!canNavigate || cooldown || e.deltaY === 0) return;
+      // only arm the cooldown if the scroll actually moved us; a scroll past the
+      // last island must not lock out the immediate scroll back
+      if (!step(e.deltaY > 0 ? 1 : -1)) return;
       cooldown = true;
       setTimeout(() => (cooldown = false), SETTLE_MS + 300);
-      step(e.deltaY > 0 ? 1 : -1);
     };
     window.addEventListener('wheel', onWheel, { passive: true });
     return () => window.removeEventListener('wheel', onWheel);

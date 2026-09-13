@@ -1,6 +1,8 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import Tweakable from './Tweakable.jsx'
+import useTweakStore from '../store/useTweakStore.js'
 
 // The signboard's post is modelled so its base sits at this Y in island-group
 // space (post centre 3.3, half-height 1.25). A themed island whose surface is
@@ -15,8 +17,12 @@ export default function Signboard({
   isOverview,
   onSignboardClick,
   surfaceY = SIGN_BASE_Y,
+  islandId,
 }) {
   const groupRef = useRef()
+  // while tweak mode is on, a board click selects the signboard for the
+  // TweakPanel instead of opening its content card
+  const tweakEnabled = useTweakStore((s) => s.enabled)
   // phase accumulates per-frame so speed changes bend the wobble instead of
   // snapping it — multiplying absolute clock time by a changing frequency
   // teleports the phase whenever isCurrent flips
@@ -56,9 +62,15 @@ export default function Signboard({
   })
 
   return (
-    // outer group anchors the board on the island surface; the inner (ref'd)
-    // group owns the wobble, which overwrites position.y every frame
-    <group position={[2.5, surfaceY - SIGN_BASE_Y, 2]}>
+    // Tweakable anchors the board on the island surface (and lets the dev tool
+    // move it); the inner (ref'd) group owns the wobble, which overwrites
+    // position.y every frame — independent of the anchor position.
+    <Tweakable
+      id={`${islandId}:signboard`}
+      islandId={islandId}
+      label="signboard"
+      defaultPosition={[2.5, surfaceY - SIGN_BASE_Y, 2]}
+    >
       <group ref={groupRef} rotation={[0, -0.3, 0]}>
         {/* post */}
         <mesh position={[0, 3.3, 0]} castShadow>
@@ -66,11 +78,13 @@ export default function Signboard({
         <meshStandardMaterial color={0x6b4226} roughness={0.9} />
       </mesh>
 
-      {/* board — clickable while its island is the current one */}
+      {/* board — clickable while its island is the current one; in tweak mode
+          the click falls through to Tweakable so it selects instead */}
       <mesh
         position={[0, 4.8, 0]}
         castShadow
         onClick={(e) => {
+          if (tweakEnabled) return
           e.stopPropagation()
           if (isCurrent) onSignboardClick()
         }}
@@ -85,6 +99,6 @@ export default function Signboard({
           <meshBasicMaterial map={labelTexture} transparent />
         </mesh>
       </group>
-    </group>
+    </Tweakable>
   )
 }

@@ -37,9 +37,21 @@ export const ISLANDS = [
         {
           primitive: 'rock',
           instances: [
-            { size: 0.2061, position: [-2.2992, 2.2, 1.6443], rotation: [0.8466, 1.5993, 0.0789] },
-            { size: 0.3591, position: [-1.3684, 2.2, 2.1481], rotation: [1.7853, 0.7816, 2.3531] },
-            { size: 0.3218, position: [0.0111, 2.2, 2.8527], rotation: [0.5977, 1.7259, 0.6805] },
+            {
+              size: 0.2061,
+              position: [-2.2992, 2.2, 1.6443],
+              rotation: [0.8466, 1.5993, 0.0789],
+            },
+            {
+              size: 0.3591,
+              position: [-1.3684, 2.2, 2.1481],
+              rotation: [1.7853, 0.7816, 2.3531],
+            },
+            {
+              size: 0.3218,
+              position: [0.0111, 2.2, 2.8527],
+              rotation: [0.5977, 1.7259, 0.6805],
+            },
           ],
         },
       ],
@@ -73,25 +85,61 @@ export const ISLANDS = [
           targetHeight: 4,
           yawOffset: -Math.PI / 2,
         },
-        // dense canopy: reused ash_tree palms, pushed to the LEFT and RIGHT
-        // edges so a central corridor stays clear and the back waterfall reads
-        // through it (they used to cluster over the middle and hide it).
+        // dense canopy: reused ash_tree palms. Positions were hand-tuned in the
+        // tweak tool; the layout is kept off the central waterfall corridor (the
+        // waterfall sits back-centre at ~[-1, -3.2]) so it still reads through.
         {
           type: 'palm',
           instances: [
-            { position: [4.3, 2.2, 1.8], rotation: [0, 1.8436, 0], scale: 0.062405 },
-            { position: [-4.3, 2.2, 1.8], rotation: [0, 5.9165, 0], scale: 0.05607 },
-            { position: [3.7, 2.2, -1.6], rotation: [0, 2.4, 0], scale: 0.0532 },
-            { position: [-3.7, 2.2, -1.6], rotation: [0, 4.1, 0], scale: 0.049 },
+            {
+              position: [4.3, 2.2, -0.05],
+              rotation: [0, 1.8436, 0],
+              scale: 0.062405,
+            },
+            {
+              position: [-3.4, 2.2, 1.8],
+              rotation: [0, 5.9165, 0],
+              scale: 0.05607,
+            },
+            {
+              position: [2.65, 2.2, -1.55],
+              rotation: [0, 2.4, 0],
+              scale: 0.0532,
+            },
+            {
+              position: [-3.7, 2.2, -1.6],
+              rotation: [0, 4.1, 0],
+              scale: 0.049,
+            },
+            // four added to fill out the canopy
+            { position: [3.4, 2.2, 2.8], rotation: [0, 0.9, 0], scale: 0.058 },
+            { position: [-2.6, 2.2, 3.1], rotation: [0, 3.4, 0], scale: 0.051 },
+            { position: [4.6, 2.2, -2.4], rotation: [0, 2.0, 0], scale: 0.047 },
+            { position: [-4.5, 2.2, -0.3], rotation: [0, 5.2, 0], scale: 0.06 },
           ],
         },
         // mossy jungle boulders
         {
           primitive: 'rock',
           instances: [
-            { size: 0.4683, position: [1.5576, 2.3, 4.5721], rotation: [2.8692, 1.2484, 0.6808], color: 0x5a7d3a },
-            { size: 0.4319, position: [0.9197, 2.3, 4.1634], rotation: [1.5932, 2.5591, 1.022], color: 0x5a7d3a },
-            { size: 0.2133, position: [4.0326, 2.3, -2.0246], rotation: [2.7637, 0.435, 1.9319], color: 0x5a7d3a },
+            {
+              size: 0.4683,
+              position: [1.5576, 2.3, 4.5721],
+              rotation: [2.8692, 1.2484, 0.6808],
+              color: 0x5a7d3a,
+            },
+            {
+              size: 0.4319,
+              position: [0.9197, 2.3, 4.1634],
+              rotation: [1.5932, 2.5591, 1.022],
+              color: 0x5a7d3a,
+            },
+            {
+              size: 0.2133,
+              position: [4.0326, 2.3, -2.0246],
+              rotation: [2.7637, 0.435, 1.9319],
+              color: 0x5a7d3a,
+            },
           ],
         },
       ],
@@ -102,77 +150,90 @@ export const ISLANDS = [
     label: 'Experience',
     color: 0xff3b5c,
     position: { x: -30, z: -55 },
-    // THEMED (beach) — flat sandy surface, palms, a bright umbrella, sandy
-    // driftwood rocks. Fully procedural.
+    // THEMED (winter) — a downloaded low-poly winter island replaces the
+    // procedural landmass entirely (structureModel), like the Contact island.
+    // The model carries its own snowy terrain, pines, rocks, gifts and a wide
+    // icy underside. "scene.gltf" is authored with the KHR_materials_pbrSpecular-
+    // Glossiness workflow, which three r167's GLTFLoader no longer supports, so
+    // the served copy in static/models/ has been re-baked to metallic-roughness
+    // baseColorFactor (see the material conversion in the asset pipeline / CONTEXT).
     theme: {
-      name: 'beach',
-      surfaceColor: 0xe8d8a0, // sand
-      cliffColor: 0xd9c48f, // sand cliff
-      style: 'beach', // flatter, thinner surface cap
-      surfaceY: 2.2,
-      colliderRadius: 6.7,
-      props: [
-        {
-          primitive: 'umbrella',
-          instances: [
-            { position: [2.6, 2.2, 1.8], size: 1.1, color: 0xff5a5a },
-          ],
+      name: 'winter',
+      surfaceY: 4.0, // where the Signboard sits — tune live to the snow surface
+      colliderRadius: 5.2, // only used for the (entry-only) click collider
+      structureModel: {
+        url: '/models/scene.gltf',
+        // centre-anchored so the deep icy underside hangs below the anchor; the
+        // group's y is the float height above the sea. position.y /
+        // targetDiameter / surfaceY are visual tuning knobs — adjust live in the
+        // dev TweakPanel. targetDiameter matches the Contact island (18) so the
+        // two floating islands read at the same scale. position.y + surfaceY were
+        // dropped 1.5 together (~20% of the above-water height) to sit it lower
+        // in the sea — keep them in lockstep so the Signboard sinks with the land.
+        position: [0, 0.0, 0],
+        targetDiameter: 18.0,
+        yawOffset: 0.017,
+        anchorY: 'center',
+        // the model ships Santa, his sleigh and the reindeer team tucked under
+        // the landmass — strip them so only the island itself remains.
+        hideNodes: ['santa', 'Sleigh', 'deer'],
+        // the model's flowing water is the "Ice" mesh (glTF material "material_1",
+        // a teal). Retint it to the sea's look (Sea.jsx: 0x00a8cc, roughness 0.4,
+        // metalness 0.1) so the water pouring off the island reads as the same
+        // water as the sea below.
+        materialOverrides: {
+          material_1: { color: 0x00a8cc, roughness: 0.4, metalness: 0.1 },
         },
-        {
-          primitive: 'rock',
-          instances: [
-            { size: 0.3445, position: [3.4658, 2.2, -3.0017], rotation: [1.5279, 1.9241, 2.8366], color: 0xbfae8e },
-            { size: 0.411, position: [4.0308, 2.2, 2.6605], rotation: [2.5856, 2.1193, 2.0013], color: 0xbfae8e },
-            { size: 0.2707, position: [2.1156, 2.2, -1.9508], rotation: [1.0753, 0.1155, 0.5407], color: 0xbfae8e },
-            { size: 0.3402, position: [-0.2234, 2.2, -2.0402], rotation: [2.0909, 0.059, 1.3647], color: 0xbfae8e },
-            { size: 0.3596, position: [0.1012, 2.2, 3.234], rotation: [1.6162, 1.9559, 2.4522], color: 0xbfae8e },
-          ],
-        },
-      ],
+      },
+      props: [],
     },
   },
   {
     id: 'contact',
     label: 'Contact',
-    color: 0xe8d5f5,
+    color: 0xbfe6a8,
     position: { x: 20, z: -85 },
-    // THEMED (snowy) — white snow cap + rounded mound, pine trees, a snowman,
-    // and snow-capped rocks. Fully procedural.
+    // THEMED (floating) — a downloaded low-poly flying island replaces the
+    // procedural landmass entirely (structureModel), so this island has no
+    // procedural props of its own; the model already carries its own trees,
+    // rocks and underside spike. "Low Poly Flying Island" by Mohamed Fsili,
+    // CC-BY-4.0 (https://sketchfab.com/3d-models/low-poly-flying-island-49c22c7d4f3249688a000fc526b84a76)
+    // — attribution required, see the Contact card / site credits.
     theme: {
-      name: 'snowy',
-      surfaceColor: 0xf5f9ff, // snow
-      cliffColor: 0x8fa3b3, // icy grey-blue
-      style: 'snow', // adds a rounded snow mound
-      surfaceY: 2.2,
-      colliderRadius: 5.2,
-      props: [
-        {
-          primitive: 'snowman',
-          instances: [{ position: [-1.5, 2.2, -1.8], size: 1 }],
+      name: 'floating',
+      surfaceY: 2.6, // where the Signboard sits — tune to the model's grass top
+      colliderRadius: 5.2, // only used for the (entry-only) click collider
+      structureModel: {
+        url: '/models/flying_island.glb',
+        // centre-anchored so the underside spike hangs below the anchor; the
+        // group's y is the float height above the sea. All three of
+        // position.y / targetDiameter / surfaceY are visual tuning knobs —
+        // adjust live in the dev TweakPanel once the .bin is in place.
+        position: [0, 1.5, 0],
+        targetDiameter: 18.0,
+        yawOffset: 1.518,
+        anchorY: 'center',
+        // the model ships its own river/pool water (glTF material "Material.001",
+        // a murky teal at 33% opacity that reads olive over the brown rock and
+        // clashes with our sea). Retint it to the sea's look (Sea.jsx: 0x00a8cc,
+        // roughness 0.4, metalness 0.1) at a touch more opacity so the rock stops
+        // bleeding through, so it reads as the same water as the sea below.
+        materialOverrides: {
+          'Material.001': {
+            color: 0x00a8cc,
+            opacity: 0.85,
+            roughness: 0.4,
+            metalness: 0.1,
+          },
         },
-        {
-          primitive: 'pine',
-          instances: [
-            { position: [3.6345, 2.2, 1.1953], size: 1.15 },
-            { position: [-2.4774, 2.2, -0.1005], size: 1 },
-            { position: [2.2, 2.2, -2.6], size: 0.9 },
-          ],
-        },
-        {
-          primitive: 'rock',
-          instances: [
-            { size: 0.2207, position: [-3.8661, 2.2, -1.9716], rotation: [0.1865, 2.5998, 1.8508], color: 0x9aa7b0, snowCap: true },
-            { size: 0.3193, position: [2.1117, 2.2, 0.1979], rotation: [1.9158, 2.7324, 0.7934], color: 0x9aa7b0, snowCap: true },
-            { size: 0.4095, position: [-4.2932, 2.2, -1.3204], rotation: [0.5573, 0.8134, 0.0594], color: 0x9aa7b0, snowCap: true },
-          ],
-        },
-      ],
+      },
+      props: [],
     },
   },
-]
+];
 
-export const ISLAND_COUNT = ISLANDS.length
-export const LAST_ISLAND = ISLAND_COUNT - 1
+export const ISLAND_COUNT = ISLANDS.length;
+export const LAST_ISLAND = ISLAND_COUNT - 1;
 
-export const ENTRY_ISLAND_INDEX = ISLANDS.findIndex((i) => i.isEntry)
-export const ENTRY_ISLAND = ISLANDS[ENTRY_ISLAND_INDEX]
+export const ENTRY_ISLAND_INDEX = ISLANDS.findIndex((i) => i.isEntry);
+export const ENTRY_ISLAND = ISLANDS[ENTRY_ISLAND_INDEX];

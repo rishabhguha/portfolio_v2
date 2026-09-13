@@ -447,6 +447,160 @@ canvas {
   transform: scale(1.3);
 }
 
+/* ---- Tweak panel (dev tool) ---- */
+.tweak-panel {
+  position: fixed;
+  top: 5rem;
+  right: 1.5rem;
+  z-index: 200;
+  width: 250px;
+  background: rgba(20, 20, 35, 0.82);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  color: var(--white);
+  font-family: 'Space Mono', monospace;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  user-select: none;
+}
+
+.tweak-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tweak-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.tweak-toggle {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tweak-toggle.on {
+  background: var(--cyan);
+  color: var(--black);
+  border-color: var(--cyan);
+}
+
+.tweak-body {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.tweak-hint {
+  font-size: 0.65rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.tweak-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tweak-label {
+  font-size: 0.8rem;
+  color: var(--white);
+  text-transform: capitalize;
+}
+
+.tweak-sub {
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.tweak-row {
+  display: grid;
+  grid-template-columns: 1rem 1fr 3.4rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tweak-row label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.tweak-row input[type='range'] {
+  width: 100%;
+  accent-color: var(--cyan);
+  cursor: pointer;
+}
+
+.tweak-row input[type='number'] {
+  width: 100%;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 0.2rem 0.3rem;
+}
+
+.tweak-readout {
+  font-size: 0.65rem;
+  color: var(--cyan);
+  word-break: break-all;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+}
+
+.tweak-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.tweak-actions button,
+.tweak-copy-all {
+  flex: 1;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 0.4rem 0.3rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tweak-actions button:hover,
+.tweak-copy-all:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.tweak-copy-all {
+  width: 100%;
+  margin-top: 0.2rem;
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 768px) {
   .content-card {

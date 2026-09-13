@@ -1,5 +1,7 @@
 import IslandModel from './IslandModel.jsx'
 import PalmTree from './PalmTree.jsx'
+import Tweakable from './Tweakable.jsx'
+import useTweakStore from '../store/useTweakStore.js'
 
 // A themed island's landmass and props are built procedurally from the theme
 // descriptor in islands.js — no downloaded GLTF is required for the structure.
@@ -135,53 +137,84 @@ function Snowman({ position, rotation = [0, 0, 0], size = 1 }) {
   )
 }
 
-// One themed prop entry → its meshes.
-function Prop({ prop, islandColor }) {
+// A friendly name for the tweak panel, e.g. "flower 2".
+function propKind(prop) {
+  return prop.type ?? prop.primitive ?? 'model'
+}
+
+// One themed prop entry → its meshes. Every instance is wrapped in a Tweakable
+// so it can be click-selected and repositioned by the dev TweakPanel. The
+// Tweakable carries the position, so the inner element renders at local origin
+// ([0,0,0]); rotation/scale stay on the inner element.
+function Prop({ prop, islandId, islandColor, propIndex }) {
+  const kind = propKind(prop)
+  const mkId = (i) => `${islandId}:${propIndex}:${i}`
+  const label = (i) => `${kind} ${i + 1}`
+
   if (prop.type === 'palm') {
     return prop.instances.map((inst, i) => (
-      <PalmTree
-        key={i}
-        position={inst.position}
-        rotation={inst.rotation}
-        scale={[inst.scale, inst.scale, inst.scale]}
-      />
+      <Tweakable key={i} id={mkId(i)} islandId={islandId} label={label(i)} defaultPosition={inst.position}>
+        <PalmTree
+          position={[0, 0, 0]}
+          rotation={inst.rotation}
+          scale={[inst.scale, inst.scale, inst.scale]}
+        />
+      </Tweakable>
     ))
   }
 
   if (prop.primitive === 'rock') {
     return prop.instances.map((inst, i) => (
-      <group key={i} position={inst.position} rotation={inst.rotation}>
-        <mesh castShadow receiveShadow>
-          <dodecahedronGeometry args={[inst.size, 0]} />
-          <meshStandardMaterial
-            color={inst.color ?? (inst.useIslandColor ? islandColor : 0xcccccc)}
-            roughness={0.7}
-          />
-        </mesh>
-        {inst.snowCap && (
-          <mesh position={[0, inst.size * 0.45, 0]} castShadow>
-            <sphereGeometry args={[inst.size * 0.9, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
-            <meshStandardMaterial color={0xffffff} roughness={0.95} />
+      <Tweakable key={i} id={mkId(i)} islandId={islandId} label={label(i)} defaultPosition={inst.position}>
+        <group rotation={inst.rotation}>
+          <mesh castShadow receiveShadow>
+            <dodecahedronGeometry args={[inst.size, 0]} />
+            <meshStandardMaterial
+              color={inst.color ?? (inst.useIslandColor ? islandColor : 0xcccccc)}
+              roughness={0.7}
+            />
           </mesh>
-        )}
-      </group>
+          {inst.snowCap && (
+            <mesh position={[0, inst.size * 0.45, 0]} castShadow>
+              <sphereGeometry args={[inst.size * 0.9, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
+              <meshStandardMaterial color={0xffffff} roughness={0.95} />
+            </mesh>
+          )}
+        </group>
+      </Tweakable>
     ))
   }
 
   if (prop.primitive === 'pine') {
-    return prop.instances.map((inst, i) => <Pine key={i} {...inst} />)
+    return prop.instances.map((inst, i) => (
+      <Tweakable key={i} id={mkId(i)} islandId={islandId} label={label(i)} defaultPosition={inst.position}>
+        <Pine {...inst} position={[0, 0, 0]} />
+      </Tweakable>
+    ))
   }
 
   if (prop.primitive === 'umbrella') {
-    return prop.instances.map((inst, i) => <Umbrella key={i} {...inst} />)
+    return prop.instances.map((inst, i) => (
+      <Tweakable key={i} id={mkId(i)} islandId={islandId} label={label(i)} defaultPosition={inst.position}>
+        <Umbrella {...inst} position={[0, 0, 0]} />
+      </Tweakable>
+    ))
   }
 
   if (prop.primitive === 'flower') {
-    return prop.instances.map((inst, i) => <Flower key={i} {...inst} />)
+    return prop.instances.map((inst, i) => (
+      <Tweakable key={i} id={mkId(i)} islandId={islandId} label={label(i)} defaultPosition={inst.position}>
+        <Flower {...inst} position={[0, 0, 0]} />
+      </Tweakable>
+    ))
   }
 
   if (prop.primitive === 'snowman') {
-    return prop.instances.map((inst, i) => <Snowman key={i} {...inst} />)
+    return prop.instances.map((inst, i) => (
+      <Tweakable key={i} id={mkId(i)} islandId={islandId} label={label(i)} defaultPosition={inst.position}>
+        <Snowman {...inst} position={[0, 0, 0]} />
+      </Tweakable>
+    ))
   }
 
   // downloaded GLTF prop (e.g. the waterfall). `hero` props face the camera.
@@ -189,40 +222,99 @@ function Prop({ prop, islandColor }) {
 
   if (prop.instances) {
     return prop.instances.map((inst, i) => (
-      <IslandModel
-        key={i}
-        faceCamera={faceCamera}
-        model={{
-          url: prop.url,
-          position: inst.position,
-          targetHeight: inst.targetHeight ?? prop.targetHeight,
-          yawOffset: inst.yawOffset ?? prop.yawOffset ?? 0,
-        }}
-      />
+      <Tweakable key={i} id={mkId(i)} islandId={islandId} label={label(i)} defaultPosition={inst.position}>
+        <IslandModel
+          faceCamera={faceCamera}
+          model={{
+            url: prop.url,
+            position: [0, 0, 0],
+            targetHeight: inst.targetHeight ?? prop.targetHeight,
+            yawOffset: inst.yawOffset ?? prop.yawOffset ?? 0,
+          }}
+        />
+      </Tweakable>
     ))
   }
 
   return (
-    <IslandModel
-      faceCamera={faceCamera}
-      model={{
-        url: prop.url,
-        position: prop.position,
-        targetHeight: prop.targetHeight,
-        yawOffset: prop.yawOffset ?? 0,
-      }}
-    />
+    <Tweakable id={mkId(0)} islandId={islandId} label={kind} defaultPosition={prop.position}>
+      <IslandModel
+        faceCamera={faceCamera}
+        model={{
+          url: prop.url,
+          position: [0, 0, 0],
+          targetHeight: prop.targetHeight,
+          yawOffset: prop.yawOffset ?? 0,
+        }}
+      />
+    </Tweakable>
   )
 }
 
 export default function ThemedIsland({ island, onIslandClick }) {
   const { theme } = island
-  const { colliderRadius, props = [] } = theme
+  const { colliderRadius, props = [], structureModel } = theme
+
+  // Dev tweak: a structure-model island can be click-selected and have its
+  // size (targetDiameter) + rotation (yawOffset) driven live from the panel.
+  const tweakEnabled = useTweakStore((s) => s.enabled)
+  const select = useTweakStore((s) => s.select)
+  const islandOverride = useTweakStore((s) => s.islandOverrides[island.id])
+  const islandSelected = useTweakStore((s) => s.selectedId === `island:${island.id}`)
+
+  // merge any live override onto the config so the model rescales/rotates in place
+  const effectiveModel = structureModel && {
+    ...structureModel,
+    targetDiameter: islandOverride?.size ?? structureModel.targetDiameter,
+    yawOffset: islandOverride?.yaw ?? structureModel.yawOffset ?? 0,
+  }
+
+  const islandSelectHandlers =
+    tweakEnabled && structureModel
+      ? {
+          onClick: (e) => {
+            e.stopPropagation()
+            select(`island:${island.id}`, {
+              kind: 'island',
+              islandId: island.id,
+              label: `${island.label} island`,
+              baseDiameter: structureModel.targetDiameter,
+              baseYaw: structureModel.yawOffset ?? 0,
+            })
+          },
+          onPointerOver: (e) => {
+            e.stopPropagation()
+            document.body.style.cursor = 'pointer'
+          },
+          onPointerOut: () => {
+            document.body.style.cursor = 'default'
+          },
+        }
+      : {}
 
   return (
     <group>
-      {/* procedural themed landmass */}
-      <ProceduralStructure theme={theme} />
+      {/* landmass: a downloaded GLTF structure if the theme provides one
+          (faceCamera={false} — a landmass has a fixed orientation and must not
+          swivel toward the camera), otherwise the procedural themed landmass. */}
+      {structureModel ? (
+        <group {...islandSelectHandlers}>
+          <IslandModel faceCamera={false} model={effectiveModel} />
+          {tweakEnabled && islandSelected && (
+            <axesHelper
+              args={[6]}
+              ref={(o) => {
+                if (!o) return
+                o.material.depthTest = false
+                o.material.depthWrite = false
+                o.renderOrder = 999
+              }}
+            />
+          )}
+        </group>
+      ) : (
+        <ProceduralStructure theme={theme} />
+      )}
 
       {/* invisible entry/click proxy — only the entry island reacts. Transparent
           (not visible={false}) so the raycaster still hits it behind the model. */}
@@ -248,7 +340,7 @@ export default function ThemedIsland({ island, onIslandClick }) {
 
       {/* themed props */}
       {props.map((prop, i) => (
-        <Prop key={i} prop={prop} islandColor={island.color} />
+        <Prop key={i} prop={prop} islandId={island.id} islandColor={island.color} propIndex={i} />
       ))}
     </group>
   )

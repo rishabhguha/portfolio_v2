@@ -53,6 +53,7 @@ export default function BaseIsland({
         isOverview={isOverview}
         onSignboardClick={onSignboardClick}
         surfaceY={island.theme.surfaceY}
+        islandId={island.id}
       />
     </group>
   );
