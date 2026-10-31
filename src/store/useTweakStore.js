@@ -12,7 +12,7 @@ const round = (n) => Math.round(n * 1000) / 1000
 const useTweakStore = create((set) => ({
   enabled: false, // is tweak mode active? (props are only clickable when true)
   selectedId: null, // id of the object currently being edited
-  selectedMeta: null, // prop: { islandId, label, defaultPosition } · island: { kind:'island', islandId, label, baseDiameter, baseYaw }
+  selectedMeta: null, // prop/label: { islandId, label, defaultPosition, copyKey? } · island: { kind:'island', islandId, label, baseDiameter, baseYaw }
   overrides: {}, // prop id -> [x, y, z] — props that have been moved from default
   islandOverrides: {}, // islandId -> { size, yaw } — islands resized/rotated from their config
 

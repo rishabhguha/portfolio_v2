@@ -1,7 +1,7 @@
 // Single source of truth for the four islands.
 //
 // Everything that used to be duplicated positionally across Islands.jsx, the
-// four per-island wrapper components, Signboard, Nav,
+// four per-island wrapper components, IslandLabel, Nav,
 // ProgressDots, IslandGlow and IslandOverlay now lives here. Array order is the
 // island index used by the store (currentIsland / targetIsland).
 //
@@ -17,6 +17,10 @@ export const ISLANDS = [
     // island 0 is the entry point: it pulses in overview and is the only
     // island whose (invisible collider) is clickable to leave overview mode
     isEntry: true,
+    // IslandLabel colours, sampled from the model: lime grass + terracotta rock.
+    // `labelPosition: [x, y, z]` (island-local) may be added to move the label
+    // off its default — the TweakPanel's label Copy button produces it.
+    labelTheme: { bg: '#f6fbe9', text: '#3a4a1f', accent: '#ce6348', onAccent: '#fff6ef', ring: '#9ad839' },
     // THEMED (fantasy) — a downloaded low-poly fantasy island replaces the
     // procedural landmass entirely (structureModel), like the other three. The
     // model carries its own grass skirt, terraced mountain, trees, ruin, rocks
@@ -26,7 +30,7 @@ export const ISLANDS = [
     // — attribution required; the site has no visible credit for it yet.
     theme: {
       name: 'fantasy',
-      // the sign stands on the mountain's first terrace, not on the outer
+      // the label floats over the mountain's first terrace, not on the outer
       // grass skirt: its island-local X/Z is fixed at (2.5, 2), which at this
       // diameter falls on the terrace. Tracks position.y — see yawOffset.
       surfaceY: 2.27,
@@ -40,10 +44,10 @@ export const ISLANDS = [
         // centred and tall, and at 18 it overflows the per-island framing.
         position: [0, 4.4, 0],
         targetDiameter: 15.0,
-        // 215°. Chosen by probing the terrace height at the sign's fixed
+        // 215°. Chosen by probing the terrace height at the label's default
         // island-local (2.5, 2) across a full turn: 200°–215° is the one wide
         // window where that spot is flat ground clear of the trees and the
-        // summit ruin, so the board reads against the sky.
+        // summit ruin, so the label reads against the sky.
         yawOffset: 3.752,
         anchorY: 'center',
         // the model ships two loose rocks floating in the sea beside the island
@@ -60,6 +64,8 @@ export const ISLANDS = [
     label: 'Skills',
     color: 0x00c8ff,
     position: { x: 35, z: -25 },
+    // IslandLabel colours, sampled from the model: dark pine + moss over slate.
+    labelTheme: { bg: '#1f3324', text: '#eef3ea', accent: '#8fb339', onAccent: '#1f3324', ring: '#50770f' },
     // THEMED (alpine) — a downloaded low-poly island replaces the procedural
     // landmass entirely (structureModel), like Experience and Contact. The model
     // carries its own pines, rocky peaks, boulders and dark underside.
@@ -72,15 +78,15 @@ export const ISLANDS = [
     // static/models/ has had them cut out offline, by connected component.
     theme: {
       name: 'alpine',
-      surfaceY: 2.25, // grass height under the Signboard — tracks position.y
+      surfaceY: 2.25, // grass height under the label — tracks position.y
       colliderRadius: 5.2, // only used for the (entry-only) click collider
       structureModel: {
         url: '/models/island_2.glb',
         // centre-anchored so the deep underside hangs below the anchor into the
         // sea. yawOffset turns the rocky peaks to the back, so they frame the
-        // Signboard and it stands on open grass in front of the boulders (the
-        // sign's X/Z is fixed, so yaw is what keeps it off the props). Keep
-        // position.y and surfaceY in lockstep so the Signboard sinks with the land.
+        // label and it floats over on open grass in front of the boulders (the
+        // label's default X/Z is fixed, so yaw is what keeps it clear of the props). Keep
+        // position.y and surfaceY in lockstep so the label sinks with the land.
         position: [0, 0.5, 0],
         targetDiameter: 18.0,
         yawOffset: 3.403,
@@ -94,6 +100,8 @@ export const ISLANDS = [
     label: 'Experience',
     color: 0xff3b5c,
     position: { x: -30, z: -55 },
+    // IslandLabel colours, sampled from the model: snow + glacial ice.
+    labelTheme: { bg: '#f4f9fb', text: '#2b4a5a', accent: '#3fa9c9', onAccent: '#ffffff', ring: '#85e1e6' },
     // THEMED (winter) — a downloaded low-poly winter island replaces the
     // procedural landmass entirely (structureModel), like the Contact island.
     // The model carries its own snowy terrain, pines, rocks, gifts and a wide
@@ -103,7 +111,7 @@ export const ISLANDS = [
     // baseColorFactor (see the material conversion in the asset pipeline / CONTEXT).
     theme: {
       name: 'winter',
-      surfaceY: 4.0, // where the Signboard sits — tune live to the snow surface
+      surfaceY: 4.0, // the ground the label floats over — tune live to the snow surface
       colliderRadius: 5.2, // only used for the (entry-only) click collider
       structureModel: {
         url: '/models/island_3.gltf',
@@ -113,7 +121,7 @@ export const ISLANDS = [
         // dev TweakPanel. targetDiameter matches the Contact island (18) so the
         // two floating islands read at the same scale. position.y + surfaceY were
         // dropped 1.5 together (~20% of the above-water height) to sit it lower
-        // in the sea — keep them in lockstep so the Signboard sinks with the land.
+        // in the sea — keep them in lockstep so the label sinks with the land.
         position: [0, 0.0, 0],
         targetDiameter: 18.0,
         yawOffset: 0.017,
@@ -137,6 +145,8 @@ export const ISLANDS = [
     label: 'Contact',
     color: 0xbfe6a8,
     position: { x: 20, z: -85 },
+    // IslandLabel colours, sampled from the model: warm earth rock + bright grass.
+    labelTheme: { bg: '#fbf3ea', text: '#5a3a22', accent: '#5ea821', onAccent: '#ffffff', ring: '#a96d42' },
     // THEMED (floating) — a downloaded low-poly flying island replaces the
     // procedural landmass entirely (structureModel), so this island has no
     // procedural props of its own; the model already carries its own trees,
@@ -145,7 +155,7 @@ export const ISLANDS = [
     // — attribution required, see the Contact card / site credits.
     theme: {
       name: 'floating',
-      surfaceY: 2.6, // where the Signboard sits — tune to the model's grass top
+      surfaceY: 2.6, // the ground the label floats over — tune to the model's grass top
       colliderRadius: 5.2, // only used for the (entry-only) click collider
       structureModel: {
         url: '/models/island_4.glb',

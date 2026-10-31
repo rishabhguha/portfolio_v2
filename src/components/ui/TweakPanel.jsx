@@ -1,7 +1,7 @@
 import useTweakStore from '../../store/useTweakStore.js'
 
-// Top-right dev panel for tweaking the scene. Toggle it on, then click either a
-// prop (edit X/Y/Z position) or an island's landmass (edit its size + rotation).
+// Top-right dev panel for tweaking the scene. Toggle it on, then click a prop or
+// an island label (edit X/Y/Z position) or an island's landmass (size + rotation).
 // "Copy" puts config-ready values on the clipboard to paste back into islands.js.
 const AXES = ['X', 'Y', 'Z']
 const MIN = -12
@@ -126,7 +126,15 @@ function PropControls({ meta }) {
       <div className="tweak-readout">[{position.map(fmt).join(', ')}]</div>
 
       <div className="tweak-actions">
-        <button onClick={() => copy(`[${position.map(fmt).join(', ')}]`)}>Copy</button>
+        <button
+          onClick={() => {
+            const value = `[${position.map(fmt).join(', ')}]`
+            // labels copy as a ready-to-paste islands.js field
+            copy(meta.copyKey ? `${meta.copyKey}: ${value},` : value)
+          }}
+        >
+          Copy
+        </button>
         <button onClick={resetSelected}>Reset</button>
         <button onClick={clearSelection}>Deselect</button>
       </div>
@@ -158,7 +166,7 @@ export default function TweakPanel() {
       {enabled && (
         <div className="tweak-body">
           {!selectedMeta ? (
-            <p className="tweak-hint">Click a prop (move it) or an island (resize / rotate) in the scene.</p>
+            <p className="tweak-hint">Click a prop or label (move it) or an island (resize / rotate) in the scene.</p>
           ) : selectedMeta.kind === 'island' ? (
             <IslandControls meta={selectedMeta} />
           ) : (

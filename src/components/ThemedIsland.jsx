@@ -1,5 +1,4 @@
 import IslandModel from './IslandModel.jsx'
-import PalmTree from './PalmTree.jsx'
 import Tweakable from './Tweakable.jsx'
 import useTweakStore from '../store/useTweakStore.js'
 
@@ -12,8 +11,8 @@ import useTweakStore from '../store/useTweakStore.js'
 //      explore mode (only the entry island wires onIslandClick). It must
 //      render (transparent, opacity 0) rather than visible={false}, because
 //      the raycaster skips invisible objects and the click would never fire.
-//   2. props + Signboard anchor to an explicit `surfaceY` (BaseIsland passes
-//      it to the Signboard), never to a bounding box measured per frame.
+//   2. props + the IslandLabel anchor to an explicit `surfaceY`, never to a
+//      bounding box measured per frame.
 //   3. shadows are cast/received by the procedural meshes directly.
 //
 // Real GLTF props still work: an entry with a `url` (e.g. the waterfall) loads
@@ -150,18 +149,6 @@ function Prop({ prop, islandId, islandColor, propIndex }) {
   const kind = propKind(prop)
   const mkId = (i) => `${islandId}:${propIndex}:${i}`
   const label = (i) => `${kind} ${i + 1}`
-
-  if (prop.type === 'palm') {
-    return prop.instances.map((inst, i) => (
-      <Tweakable key={i} id={mkId(i)} islandId={islandId} label={label(i)} defaultPosition={inst.position}>
-        <PalmTree
-          position={[0, 0, 0]}
-          rotation={inst.rotation}
-          scale={[inst.scale, inst.scale, inst.scale]}
-        />
-      </Tweakable>
-    ))
-  }
 
   if (prop.primitive === 'rock') {
     return prop.instances.map((inst, i) => (

@@ -206,36 +206,48 @@ canvas {
   margin-bottom: 1rem;
 }
 
-/* ---- Skills grid ---- */
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
+/* ---- Skill groups ---- */
+.skill-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
   margin-top: 1.5rem;
 }
 
+.skill-group h3 {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #888;
+  margin-bottom: 0.6rem;
+}
+
+.skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* One colour per group, so each row reads as a category at a glance. */
 .skill-item {
   background: var(--black);
   color: var(--white);
-  padding: 1rem 1.2rem;
-  border-radius: 14px;
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 500;
-  text-align: center;
-  transition: transform 0.2s, background 0.2s;
+  transition: transform 0.2s;
 }
 
-.skill-item:nth-child(2n) {
+.skill-group:nth-child(2) .skill-item {
   background: var(--cyan);
   color: var(--black);
 }
-.skill-item:nth-child(3n) {
+.skill-group:nth-child(3) .skill-item {
   background: var(--red);
   color: var(--white);
-}
-.skill-item:nth-child(5n) {
-  background: var(--pink);
-  color: var(--black);
 }
 
 .skill-item:hover {
@@ -293,6 +305,9 @@ canvas {
 }
 
 .contact-item {
+  display: block;
+  color: inherit;
+  text-decoration: none;
   padding: 1.5rem;
   border-radius: 16px;
   background: #f8f8fa;
@@ -323,6 +338,30 @@ canvas {
   font-size: 0.75rem;
   color: #888;
   margin: 0;
+}
+
+/* ---- Toast ---- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 2rem;
+  z-index: 300;
+  transform: translateX(-50%);
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  background: var(--black);
+  color: #fff;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  animation: toast-in-out 2s ease forwards;
+}
+
+@keyframes toast-in-out {
+  0% { opacity: 0; transform: translate(-50%, 8px); }
+  12%, 85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, 0); }
 }
 
 /* ---- Click-island hint ---- */
@@ -611,10 +650,6 @@ canvas {
     font-size: 1.6rem;
   }
 
-  .skills-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .contact-grid {
     grid-template-columns: 1fr;
   }
@@ -633,5 +668,112 @@ canvas {
 
   .island-content {
     padding: 5rem 1.5rem 3rem;
+  }
+}
+
+/* ---- Island label (rendered via drei <Html> by IslandLabel.jsx) ---- */
+/* --label-* colours are set inline from the island's `labelTheme` */
+.island-label {
+  appearance: none;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.45rem 0.45rem 0.9rem;
+  border-radius: 999px;
+  background: var(--label-bg);
+  color: var(--label-text);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 8px 24px rgba(26, 26, 46, 0.18),
+    0 0 0 3px color-mix(in srgb, var(--label-ring) 55%, transparent);
+  transition: transform 0.25s ease, opacity 0.35s ease, box-shadow 0.25s ease,
+    visibility 0s;
+}
+
+.island-label:focus-visible {
+  outline: 2px solid var(--label-accent);
+  outline-offset: 4px;
+}
+
+/* not the island in focus (or mid-flight): fade out, then drop out of
+   rendering and hit-testing once the fade has finished */
+.island-label.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px) scale(0.92);
+  transition: transform 0.35s ease, opacity 0.35s ease, visibility 0s linear 0.35s;
+}
+
+.island-label__dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--label-accent);
+}
+
+.island-label.is-active .island-label__dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--label-accent);
+  animation: island-label-ping 1.8s ease-out infinite;
+}
+
+.island-label__arrow {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: var(--label-accent);
+  color: var(--label-on-accent);
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  transition: transform 0.25s ease;
+}
+
+.island-label.is-active:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(26, 26, 46, 0.25),
+    0 0 0 4px color-mix(in srgb, var(--label-ring) 85%, transparent);
+}
+
+.island-label.is-active:hover .island-label__arrow {
+  transform: translateX(3px);
+}
+
+/* tweak mode: every label is selectable, the selected one is outlined */
+.island-label.is-tweak {
+  cursor: pointer;
+}
+
+.island-label.is-selected {
+  outline: 2px dashed var(--cyan);
+  outline-offset: 4px;
+}
+
+@keyframes island-label-ping {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-label.is-active .island-label__dot::after {
+    animation: none;
   }
 }

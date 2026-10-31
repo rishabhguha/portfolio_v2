@@ -26,7 +26,7 @@ import { FACE_CAMERA_YAW } from '../config/camera.js'
 //     for a floating island whose underside hangs below the anchor.
 //
 // `faceCamera` decides whether the model's front is turned toward the focused
-// camera. Camera-facing props (signboard-style hero props like the waterfall)
+// camera. Camera-facing props (hero props like the waterfall)
 // want it; a landmass structure or scattered foliage has a fixed orientation
 // and must NOT swivel, so it passes faceCamera={false} and only its own
 // yawOffset applies.

@@ -1,20 +1,20 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import Signboard from './Signboard.jsx';
+import IslandLabel from './IslandLabel.jsx';
 import ThemedIsland from './ThemedIsland.jsx';
 
 // Every island is model-driven: its landmass, invisible click proxy and props
 // come from ThemedIsland, keyed off the island's `theme` descriptor. This shell
 // owns only what is genuinely per-island-ordinal — the gentle bob and the entry
-// island's overview pulse — plus the Signboard. See
+// island's overview pulse — plus the island's clickable IslandLabel. See
 // docs/adr/0001-model-driven-themed-islands.md.
 export default function BaseIsland({
   island,
   islandIndex,
   currentIsland,
   isOverview,
-  onSignboardClick,
+  onLabelClick,
   onIslandClick,
 }) {
   const groupRef = useRef();
@@ -46,14 +46,10 @@ export default function BaseIsland({
     <group ref={groupRef} position={[island.position.x, 0, island.position.z]}>
       <ThemedIsland island={island} onIslandClick={onIslandClick} />
 
-      <Signboard
-        label={island.label}
-        color={island.color}
+      <IslandLabel
+        island={island}
         isCurrent={!isOverview && islandIndex === currentIsland}
-        isOverview={isOverview}
-        onSignboardClick={onSignboardClick}
-        surfaceY={island.theme.surfaceY}
-        islandId={island.id}
+        onLabelClick={onLabelClick}
       />
     </group>
   );

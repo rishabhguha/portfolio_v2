@@ -16,7 +16,7 @@ The original vanilla Three.js implementation lives in `index.html` at the root a
 
 ## Vite setup
 
-- `publicDir` is `static/`, not the default `public/`. Assets are referenced from the web root: `static/models/ash_tree.gltf` → `/models/ash_tree.gltf`, `static/textures/island_rock/*` → `/textures/island_rock/*`.
+- `publicDir` is `static/`, not the default `public/`. Assets are referenced from the web root: `static/models/island_1.glb` → `/models/island_1.glb`.
 - `build.rollupOptions.input.app` in `vite.config.js` is an **absolute machine-specific path** to `index-react.html`. It will break the build on any other machine or CI; make it relative if the build needs to be portable.
 
 ## Architecture
@@ -25,7 +25,7 @@ The original vanilla Three.js implementation lives in `index.html` at the root a
 All interactive state lives in a single Zustand store (`src/store/useStore.js`). The key flags:
 
 - `isOverview` — `true` on initial load; the camera sits high and wide showing all 4 islands. Clicking the entry island's sand base calls `enterExploreMode()`, which clears the flag and unlocks navigation after `FLIGHT_MS`.
-- `currentIsland` / `targetIsland` — `targetIsland` changes immediately so the camera starts moving at once; `currentIsland` is the settled value, written by a `SETTLE_MS` timeout in `navigateToIsland()`. Anything that should only react once the flight lands (signboard emphasis, which overlay card is `visible`) reads `currentIsland`; the camera reads `targetIsland`.
+- `currentIsland` / `targetIsland` — `targetIsland` changes immediately so the camera starts moving at once; `currentIsland` is the settled value, written by a `SETTLE_MS` timeout in `navigateToIsland()`. Anything that should only react once the flight lands (label clickability, which overlay card is `visible`) reads `currentIsland`; the camera reads `targetIsland`.
 - `isAnimating` / `scrollEnabled` — gate all navigation input during transitions.
 - `cardOpen` — an overlay card is showing; also suppresses navigation.
 
@@ -57,7 +57,7 @@ Every consumer derives from it, so adding, reordering, or restyling an island is
 | --- | --- |
 | `Islands.jsx` | maps `ISLANDS` → `BaseIsland` |
 | `CameraController` | precomputes per-island camera framing from `position` |
-| `Signboard` | receives `label` + `color` as props |
+| `IslandLabel` | reads `label`, `labelTheme`, optional `labelPosition` |
 | `IslandGlow` | positions on `ENTRY_ISLAND` |
 | `IslandModel` | renders the optional `model` descriptor |
 | `Nav`, `ProgressDots` | map `ISLANDS` for labels and dots |
@@ -66,13 +66,13 @@ Every consumer derives from it, so adding, reordering, or restyling an island is
 
 The config module imports nothing, so there is no cycle even though both the store and the 3D tree depend on it.
 
-`BaseIsland` is the one island component: sand base + grass disc + palm trees + accent rocks + `Signboard`, plus the per-island bob and the entry island's overview pulse. It takes the whole descriptor as an `island` prop. Edit `BaseIsland` for island *mechanics*, `islands.js` for island *content*.
+`BaseIsland` is the one island component: sand base + grass disc + palm trees + accent rocks + `IslandLabel`, plus the per-island bob and the entry island's overview pulse. It takes the whole descriptor as an `island` prop. Edit `BaseIsland` for island *mechanics*, `islands.js` for island *content*.
 
 Only the island flagged `isEntry` receives `onIslandClick`, so its sand base is the sole exit from overview mode — and the same flag drives the invitation pulse.
 
 `islandIndex` still exists as a prop, but only for things that are genuinely ordinal: the bob phase offset and the `currentIsland` comparison.
 
-Island-side idle animations whose speed or amplitude depends on state (`Signboard` wobble, entry-island pulse) accumulate phase per-frame (`phase += delta * speed`) and damp their amplitudes with `THREE.MathUtils.damp`. Never multiply absolute clock time by a state-dependent frequency — when the state flips, the phase teleports and the animation visibly snaps.
+Island-side idle animations whose speed or amplitude depends on state (`IslandLabel` bob, entry-island pulse) accumulate phase per-frame (`phase += delta * speed`) and damp their amplitudes with `THREE.MathUtils.damp`. Never multiply absolute clock time by a state-dependent frequency — when the state flips, the phase teleports and the animation visibly snaps.
 
 ### Camera
 Two states. The overview pair is a constant in `CameraController.jsx`; the per-island pairs are precomputed once at module load from the island config:
@@ -84,10 +84,8 @@ Two states. The overview pair is a constant in `CameraController.jsx`; the per-i
 Flights are time-based tweens, not per-frame lerps. When the destination changes, the controller captures the camera's current position and current look point (world direction projected 10 units ahead) as fixed start values, then eases both toward the target over `FLIGHT_MS` — `easeInOutCubic` from rest, `easeOutCubic` when redirecting a flight already in motion (it has momentum, so no ease-in). At `t = 1` it snaps exactly onto the target and clears the flight, after which `useFrame` does nothing — the camera is perfectly still before `currentIsland` settles at `SETTLE_MS`. Don't reintroduce constant-α lerps here: they're frame-rate dependent and never arrive, which reads as end-of-flight creep/jank.
 
 ### Assets and geometry notes
-- `PalmTree` loads `/models/ash_tree.gltf` via drei's `useGLTF` and clones the scene per instance. The clone pass rewrites any transparent material to alpha-tested cutout (`transparent=false`, `alphaTest=0.2`, `depthWrite=true`) — without this the leaves render nearly invisible against the sea because the source model uses `alphaMode: BLEND` with a high shine-through factor.
-- The sand base uses the `island_rock` PBR texture set (diff / arm / nor), `RepeatWrapping` at `repeat(3,2)`, with `arm` bound to ao, roughness, and metalness.
 - Island geometry deliberately avoids vertex deformation (a `deformGeometry` helper was removed). Random X/Z displacement on closed cylinders flips triangle normals, which reads as transparent holes. The grass disc and sand base are both plain capped `CylinderGeometry`.
-- `Signboard` builds its label as a `CanvasTexture` drawn with 2D canvas text, so labels depend on the Space Grotesk webfont having loaded.
+- `IslandLabel` is each island's click target: an HTML `<button>` pill rendered through drei's `<Html>` (screen-aligned, `distanceFactor` 14, `zIndexRange` kept under the card overlay). Its colours come from the island's `labelTheme` (`bg`, `text`, `accent`, `onAccent`, `ring` → `--label-*` CSS vars); it sits at `labelPosition` (island-local) or defaults to a constant `(0, 8, 2)` on every island. It is clickable only when its island is `currentIsland` and the camera isn't animating; otherwise it is hidden (fades out, then `visibility: hidden`), so only the island in focus shows a label. In tweak mode a click selects it for the TweakPanel instead (Html isn't raycast, so it calls `select` itself), and the panel's Copy emits a paste-ready `labelPosition: [...]`.
 - `IslandModel` renders an island's optional `model` descriptor (`url`, `position`, `targetHeight`, `yawOffset`). Downloaded props arrive in arbitrary authoring units, so it never hardcodes a scale: it measures the loaded scene's `Box3` and scales by `targetHeight / size.y`, then offsets so the model is centred on X/Z with its **base** on `position.y`. It is wrapped in an error boundary — a missing or malformed file logs a warning and the island renders without it, instead of throwing through `Scene`'s Suspense and blanking the canvas. Sketchfab assets must be downloaded manually (login + license acceptance) into `static/models/`.
 
 ### UI overlay

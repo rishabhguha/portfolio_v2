@@ -37,7 +37,7 @@ export default function Scene() {
     [currentIsland, navigateToIsland],
   );
 
-  const handleSignboardClick = useCallback(() => {
+  const handleLabelClick = useCallback(() => {
     if (!cardOpen) openCard();
   }, [cardOpen, openCard]);
 
@@ -121,7 +121,7 @@ export default function Scene() {
       <Islands
         currentIsland={currentIsland}
         isOverview={isOverview}
-        onSignboardClick={handleSignboardClick}
+        onLabelClick={handleLabelClick}
         onIslandClick={enterExploreMode}
       />
 

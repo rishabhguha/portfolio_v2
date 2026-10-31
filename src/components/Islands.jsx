@@ -1,7 +1,7 @@
 import BaseIsland from './BaseIsland.jsx';
 import { ISLANDS } from '../config/islands.js';
 
-export default function Islands({ currentIsland, isOverview, onSignboardClick, onIslandClick }) {
+export default function Islands({ currentIsland, isOverview, onLabelClick, onIslandClick }) {
   return (
     <>
       {ISLANDS.map((island, index) => (
@@ -11,7 +11,7 @@ export default function Islands({ currentIsland, isOverview, onSignboardClick, o
           islandIndex={index}
           currentIsland={currentIsland}
           isOverview={isOverview}
-          onSignboardClick={onSignboardClick}
+          onLabelClick={onLabelClick}
           onIslandClick={island.isEntry && isOverview ? onIslandClick : undefined}
         />
       ))}
