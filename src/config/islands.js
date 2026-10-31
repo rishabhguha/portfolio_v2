@@ -4,6 +4,9 @@
 // four per-island wrapper components, Signboard, Nav,
 // ProgressDots, IslandGlow and IslandOverlay now lives here. Array order is the
 // island index used by the store (currentIsland / targetIsland).
+//
+// Structure models are served as `/models/island_<n>.<ext>`, numbered by island
+// number as the visitor counts them — island 1 is this array's index 0.
 
 export const ISLANDS = [
   {
@@ -14,47 +17,42 @@ export const ISLANDS = [
     // island 0 is the entry point: it pulses in overview and is the only
     // island whose (invisible collider) is clickable to leave overview mode
     isEntry: true,
-    // THEMED (tropical) — the calm entry island: bright grass dome, sandy
-    // shoreline ring, palms and scattered flowers. Fully procedural.
+    // THEMED (fantasy) — a downloaded low-poly fantasy island replaces the
+    // procedural landmass entirely (structureModel), like the other three. The
+    // model carries its own grass skirt, terraced mountain, trees, ruin, rocks
+    // and flowers, so there are no procedural props here either.
+    // "Fantasy_Island" by Omar Faruq Tawsif, CC-BY-4.0
+    // (https://sketchfab.com/3d-models/fantasy-island-88765d3c5db349e59c39cf9f592eba17)
+    // — attribution required; the site has no visible credit for it yet.
     theme: {
-      name: 'tropical',
-      surfaceColor: 0x5cb85c, // bright grass cap
-      cliffColor: 0xc2a878, // sandy cliff
-      style: 'tropical', // adds a sand shoreline ring
-      surfaceY: 2.2,
-      colliderRadius: 5.8,
-      props: [
-        {
-          primitive: 'flower',
-          instances: [
-            { position: [3.2, 2.2, -0.8], color: 0xff6fae },
-            { position: [-0.5, 2.2, -2.8], color: 0xffd93b },
-            { position: [1.2, 2.2, 2.6], color: 0xffffff },
-            { position: [-2.8, 2.2, -0.4], color: 0xff5a5a },
-            { position: [0.4, 2.2, 1.2], color: 0xff9d3b },
-          ],
-        },
-        {
-          primitive: 'rock',
-          instances: [
-            {
-              size: 0.2061,
-              position: [-2.2992, 2.2, 1.6443],
-              rotation: [0.8466, 1.5993, 0.0789],
-            },
-            {
-              size: 0.3591,
-              position: [-1.3684, 2.2, 2.1481],
-              rotation: [1.7853, 0.7816, 2.3531],
-            },
-            {
-              size: 0.3218,
-              position: [0.0111, 2.2, 2.8527],
-              rotation: [0.5977, 1.7259, 0.6805],
-            },
-          ],
-        },
-      ],
+      name: 'fantasy',
+      // the sign stands on the mountain's first terrace, not on the outer
+      // grass skirt: its island-local X/Z is fixed at (2.5, 2), which at this
+      // diameter falls on the terrace. Tracks position.y — see yawOffset.
+      surfaceY: 2.27,
+      colliderRadius: 7.0, // only used for the (entry-only) click collider
+      structureModel: {
+        url: '/models/island_1.glb',
+        // centre-anchored. This model has a shallow underside (a wide disc, not
+        // a deep spike), so position.y is set so the red rock band under the
+        // grass straddles the waterline instead of the green skirt drowning.
+        // targetDiameter is 15, not the 18 the other three use: the mountain is
+        // centred and tall, and at 18 it overflows the per-island framing.
+        position: [0, 4.4, 0],
+        targetDiameter: 15.0,
+        // 215°. Chosen by probing the terrace height at the sign's fixed
+        // island-local (2.5, 2) across a full turn: 200°–215° is the one wide
+        // window where that spot is flat ground clear of the trees and the
+        // summit ruin, so the board reads against the sky.
+        yawOffset: 3.752,
+        anchorY: 'center',
+        // the model ships two loose rocks floating in the sea beside the island
+        // (a tall banner-topped spire and a smaller lump) plus its own 480-unit
+        // ocean plane. The plane also has to go because it is measured into the
+        // bounding box, which would shrink the island to a fifth of its size.
+        hideNodes: ['Cylinder009_94', 'Cube080_270', 'yet_111'],
+      },
+      props: [],
     },
   },
   {
@@ -62,87 +60,33 @@ export const ISLANDS = [
     label: 'Skills',
     color: 0x00c8ff,
     position: { x: 35, z: -25 },
-    // THEMED (jungle) — dark, dense green terrain, clustered palm canopy, mossy
-    // boulders, and the real waterfall (a downloaded GLTF that exists). See
-    // CONTEXT.md and docs/adr/0001-model-driven-themed-islands.md.
+    // THEMED (alpine) — a downloaded low-poly island replaces the procedural
+    // landmass entirely (structureModel), like Experience and Contact. The model
+    // carries its own pines, rocky peaks, boulders and dark underside.
+    // "Lowpoly island" by alfance, CC-BY-4.0
+    // (https://sketchfab.com/3d-models/lowpoly-island-26c3f2f271ab41a5a0c9178ac5304df8)
+    // — attribution required; the site has no visible credit for it yet.
+    // The download is ONE merged mesh with one texture-palette material, so its
+    // sun and clouds can't be stripped with hideNodes (no nodes to match) or
+    // materialOverrides (tinting would hit the whole island). The served copy in
+    // static/models/ has had them cut out offline, by connected component.
     theme: {
-      name: 'jungle',
-      surfaceColor: 0x2e6b2e, // deep jungle green
-      cliffColor: 0x6b5335, // dark earthy rock
-      style: 'jungle',
-      surfaceY: 2.2,
-      colliderRadius: 5.7,
-      props: [
-        // hero: the existing waterfall. hero → faces the camera. Placed at the
-        // BACK (-Z is the far side from the camera at island + CAMERA_OFFSET),
-        // reading as a backdrop behind the signboard. Authored face is roughly
-        // +X, so the extra -90° (offsetting FACE_CAMERA_YAW's +Z assumption)
-        // turns that +X front squarely toward the viewer.
-        {
-          url: '/models/waterfall.glb',
-          hero: true,
-          position: [-1.0, 2.2, -3.2],
-          targetHeight: 4,
-          yawOffset: -Math.PI / 2,
-        },
-        // dense canopy: reused ash_tree palms. Positions were hand-tuned in the
-        // tweak tool; the layout is kept off the central waterfall corridor (the
-        // waterfall sits back-centre at ~[-1, -3.2]) so it still reads through.
-        {
-          type: 'palm',
-          instances: [
-            {
-              position: [4.3, 2.2, -0.05],
-              rotation: [0, 1.8436, 0],
-              scale: 0.062405,
-            },
-            {
-              position: [-3.4, 2.2, 1.8],
-              rotation: [0, 5.9165, 0],
-              scale: 0.05607,
-            },
-            {
-              position: [2.65, 2.2, -1.55],
-              rotation: [0, 2.4, 0],
-              scale: 0.0532,
-            },
-            {
-              position: [-3.7, 2.2, -1.6],
-              rotation: [0, 4.1, 0],
-              scale: 0.049,
-            },
-            // four added to fill out the canopy
-            { position: [3.4, 2.2, 2.8], rotation: [0, 0.9, 0], scale: 0.058 },
-            { position: [-2.6, 2.2, 3.1], rotation: [0, 3.4, 0], scale: 0.051 },
-            { position: [4.6, 2.2, -2.4], rotation: [0, 2.0, 0], scale: 0.047 },
-            { position: [-4.5, 2.2, -0.3], rotation: [0, 5.2, 0], scale: 0.06 },
-          ],
-        },
-        // mossy jungle boulders
-        {
-          primitive: 'rock',
-          instances: [
-            {
-              size: 0.4683,
-              position: [1.5576, 2.3, 4.5721],
-              rotation: [2.8692, 1.2484, 0.6808],
-              color: 0x5a7d3a,
-            },
-            {
-              size: 0.4319,
-              position: [0.9197, 2.3, 4.1634],
-              rotation: [1.5932, 2.5591, 1.022],
-              color: 0x5a7d3a,
-            },
-            {
-              size: 0.2133,
-              position: [4.0326, 2.3, -2.0246],
-              rotation: [2.7637, 0.435, 1.9319],
-              color: 0x5a7d3a,
-            },
-          ],
-        },
-      ],
+      name: 'alpine',
+      surfaceY: 2.25, // grass height under the Signboard — tracks position.y
+      colliderRadius: 5.2, // only used for the (entry-only) click collider
+      structureModel: {
+        url: '/models/island_2.glb',
+        // centre-anchored so the deep underside hangs below the anchor into the
+        // sea. yawOffset turns the rocky peaks to the back, so they frame the
+        // Signboard and it stands on open grass in front of the boulders (the
+        // sign's X/Z is fixed, so yaw is what keeps it off the props). Keep
+        // position.y and surfaceY in lockstep so the Signboard sinks with the land.
+        position: [0, 0.5, 0],
+        targetDiameter: 18.0,
+        yawOffset: 3.403,
+        anchorY: 'center',
+      },
+      props: [],
     },
   },
   {
@@ -153,7 +97,7 @@ export const ISLANDS = [
     // THEMED (winter) — a downloaded low-poly winter island replaces the
     // procedural landmass entirely (structureModel), like the Contact island.
     // The model carries its own snowy terrain, pines, rocks, gifts and a wide
-    // icy underside. "scene.gltf" is authored with the KHR_materials_pbrSpecular-
+    // icy underside. "island_3.gltf" is authored with the KHR_materials_pbrSpecular-
     // Glossiness workflow, which three r167's GLTFLoader no longer supports, so
     // the served copy in static/models/ has been re-baked to metallic-roughness
     // baseColorFactor (see the material conversion in the asset pipeline / CONTEXT).
@@ -162,7 +106,7 @@ export const ISLANDS = [
       surfaceY: 4.0, // where the Signboard sits — tune live to the snow surface
       colliderRadius: 5.2, // only used for the (entry-only) click collider
       structureModel: {
-        url: '/models/scene.gltf',
+        url: '/models/island_3.gltf',
         // centre-anchored so the deep icy underside hangs below the anchor; the
         // group's y is the float height above the sea. position.y /
         // targetDiameter / surfaceY are visual tuning knobs — adjust live in the
@@ -204,7 +148,7 @@ export const ISLANDS = [
       surfaceY: 2.6, // where the Signboard sits — tune to the model's grass top
       colliderRadius: 5.2, // only used for the (entry-only) click collider
       structureModel: {
-        url: '/models/flying_island.glb',
+        url: '/models/island_4.glb',
         // centre-anchored so the underside spike hangs below the anchor; the
         // group's y is the float height above the sea. All three of
         // position.y / targetDiameter / surfaceY are visual tuning knobs —

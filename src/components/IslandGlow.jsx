@@ -20,7 +20,9 @@ export default function IslandGlow({ isOverview }) {
     const count = 24
     return Array.from({ length: count }, (_, i) => {
       const angle = (i / count) * Math.PI * 2
-      const radius = 7 + rng() * 1.5
+      // just outside the entry island's structure model (radius 7.5), so the
+      // particles orbit over open sea instead of inside the grass skirt
+      const radius = 9 + rng() * 1.5
       const height = 2.5 + rng() * 1.5
       return {
         key: i,
@@ -117,7 +119,7 @@ export default function IslandGlow({ isOverview }) {
         rotation={[-Math.PI / 2, 0, 0]}
         position={[ISLAND0_POS.x, 2.2, ISLAND0_POS.z]}
       >
-        <torusGeometry args={[7.5, 0.12, 16, 100]} />
+        <torusGeometry args={[9.5, 0.12, 16, 100]} />
         <meshBasicMaterial color={0x00c8ff} transparent opacity={0} />
       </mesh>
 
@@ -127,7 +129,7 @@ export default function IslandGlow({ isOverview }) {
         rotation={[-Math.PI / 2, 0, 0]}
         position={[ISLAND0_POS.x, 2.15, ISLAND0_POS.z]}
       >
-        <torusGeometry args={[8.2, 0.3, 16, 100]} />
+        <torusGeometry args={[10.2, 0.3, 16, 100]} />
         <meshBasicMaterial color={0x00c8ff} transparent opacity={0} />
       </mesh>
 
