@@ -2,11 +2,18 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
+// ±500 reaches past the secret island at z -420 (config/secretIsland.js) so it
+// floats on water rather than past the sea's edge. The segment count stays at
+// 120 to keep the per-frame wave loop cheap; ~8.3-unit cells still sample the
+// shortest wave (~89 units) adequately. Keep the far edge inside the camera's
+// far plane (1000, App.jsx).
+const SEA_SIZE = 1000
+
 export default function Sea() {
   const meshRef = useRef()
 
   const geometry = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(400, 400, 120, 120)
+    const geo = new THREE.PlaneGeometry(SEA_SIZE, SEA_SIZE, 120, 120)
     return geo
   }, [])
 

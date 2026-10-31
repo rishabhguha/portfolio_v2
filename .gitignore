@@ -25,3 +25,6 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Source (uncompressed) models — the compressed copies in static/models are what ships
+models-src/

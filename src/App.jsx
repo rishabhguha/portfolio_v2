@@ -9,6 +9,7 @@ import ScrollHint from './components/ui/ScrollHint.jsx'
 import ProgressDots from './components/ui/ProgressDots.jsx'
 import ClickIslandHint from './components/ui/ClickIslandHint.jsx'
 import TweakPanel from './components/ui/TweakPanel.jsx'
+import SecretOverlay from './components/ui/SecretOverlay.jsx'
 import useStore from './store/useStore.js'
 
 function CanvasScene() {
@@ -40,6 +41,7 @@ export default function App() {
       <ClickIslandHint />
       <ScrollHint />
       <ProgressDots />
+      <SecretOverlay />
       <TweakPanel />
     </>
   )

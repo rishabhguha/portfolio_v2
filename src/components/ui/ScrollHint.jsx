@@ -4,6 +4,7 @@ import useStore from '../../store/useStore.js'
 export default function ScrollHint() {
   const isOverview = useStore((s) => s.isOverview)
   const scrollEnabled = useStore((s) => s.scrollEnabled)
+  const secretActive = useStore((s) => s.secretPhase !== 'off')
   const [visible, setVisible] = useState(false)
   const [opacity, setOpacity] = useState(1)
 
@@ -26,7 +27,7 @@ export default function ScrollHint() {
   if (!visible) return null
 
   return (
-    <div className="scroll-hint" style={{ opacity }}>
+    <div className="scroll-hint" style={{ opacity: secretActive ? 0 : opacity }}>
       <span>Scroll to explore</span>
       <div className="scroll-arrow" />
     </div>

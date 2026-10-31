@@ -26,6 +26,7 @@ export const labelPositionFor = (island) =>
 export default function IslandLabel({ island, isCurrent, onLabelClick }) {
   const isAnimating = useStore((s) => s.isAnimating);
   const cardOpen = useStore((s) => s.cardOpen);
+  const secretActive = useStore((s) => s.secretPhase !== 'off');
   const tweakEnabled = useTweakStore((s) => s.enabled);
   const select = useTweakStore((s) => s.select);
   const tweakId = `${island.id}:label`;
@@ -33,8 +34,9 @@ export default function IslandLabel({ island, isCurrent, onLabelClick }) {
 
   const defaultPosition = labelPositionFor(island);
   // only the island in focus shows its label, and only once the camera has
-  // settled on it: it fades out as a flight starts and back in on landing
-  const active = isCurrent && !isAnimating;
+  // settled on it: it fades out as a flight starts and back in on landing.
+  // Hidden throughout the secret-island easter egg.
+  const active = isCurrent && !isAnimating && !secretActive;
 
   // gentle bob; phase accumulates per frame and the amplitude is damped, so a
   // state flip bends the motion instead of snapping it

@@ -5,6 +5,7 @@ import Islands from './Islands.jsx';
 import Clouds from './Clouds.jsx';
 import IslandGlow from './IslandGlow.jsx';
 import CameraController from './CameraController.jsx';
+import SecretIsland from './SecretIsland.jsx';
 import useStore from '../store/useStore.js';
 import { LAST_ISLAND } from '../config/islands.js';
 import { SETTLE_MS } from '../config/timings.js';
@@ -16,14 +17,18 @@ export default function Scene() {
   const scrollEnabled = useStore((s) => s.scrollEnabled);
   const cardOpen = useStore((s) => s.cardOpen);
   const isAnimating = useStore((s) => s.isAnimating);
+  const secretPhase = useStore((s) => s.secretPhase);
+  const secretActive = secretPhase !== 'off';
 
   const enterExploreMode = useStore((s) => s.enterExploreMode);
   const navigateToIsland = useStore((s) => s.navigateToIsland);
   const openCard = useStore((s) => s.openCard);
   const closeCard = useStore((s) => s.closeCard);
+  const exitSecret = useStore((s) => s.exitSecret);
 
   // shared gate for every navigation input
-  const canNavigate = scrollEnabled && !isAnimating && !cardOpen && !isOverview;
+  const canNavigate =
+    scrollEnabled && !isAnimating && !cardOpen && !isOverview && !secretActive;
 
   // returns true only if the step lands on a real island — a no-op at the
   // boundary reports false so callers don't consume the input (see wheel cooldown)
@@ -48,13 +53,17 @@ export default function Scene() {
         closeCard();
         return;
       }
+      if (secretActive && e.key === 'Escape') {
+        exitSecret();
+        return;
+      }
       if (!canNavigate) return;
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') step(1);
       else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') step(-1);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [canNavigate, cardOpen, closeCard, step]);
+  }, [canNavigate, cardOpen, closeCard, secretActive, exitSecret, step]);
 
   // scroll / wheel navigation
   useEffect(() => {
@@ -129,7 +138,13 @@ export default function Scene() {
 
       <IslandGlow isOverview={isOverview} />
 
-      <CameraController isOverview={isOverview} targetIsland={targetIsland} />
+      <SecretIsland />
+
+      <CameraController
+        isOverview={isOverview}
+        secretActive={secretActive}
+        targetIsland={targetIsland}
+      />
     </>
   );
 }

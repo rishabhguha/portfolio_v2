@@ -39,7 +39,7 @@ All flight/settle durations live in `src/config/timings.js`: `FLIGHT_MS` (2000, 
 ```
 Scene
  ├── Sky            – canvas gradient texture set as scene.background
- ├── Sea            – 400×400 PlaneGeometry, 120×120 segments; waves via per-vertex Z
+ ├── Sea            – 1000×1000 PlaneGeometry, 120×120 segments; waves via per-vertex Z
  │                    displacement + computeVertexNormals() every frame (hot loop)
  ├── Islands        – maps the ISLANDS config → BaseIsland, see below
  ├── Clouds         – 20 groups of sphere puffs drifting on X, seeded LCG for stability
@@ -90,6 +90,22 @@ Flights are time-based tweens, not per-frame lerps. When the destination changes
 
 ### UI overlay
 HTML UI components in `src/components/ui/` are positioned `fixed` over the canvas. `IslandOverlay` renders all 4 content cards simultaneously; only the one matching `currentIsland` gets class `visible`. A `mousedown` listener on `document` (registered only while `cardOpen`) dismisses the card on an outside click. Card copy is hardcoded in `IslandOverlay.jsx` as four components in a `CARDS` map keyed by island `id`.
+
+### Secret island (Plastic Beach easter egg)
+A hidden extra outside `ISLANDS`: the Gorillaz *Plastic Beach* island at `(-43, -420)`, far out on the horizon behind the About island, shrouded in mist. All of its data lives in `src/config/secretIsland.js`: position, model descriptor, camera framing, `SECRET_TRACKS`, `SECRET_ANSWER`.
+
+- **State:** the store's `secretPhase` cycles through `'off'`, `'flying'`, `'revealed'` and `'solved'`.
+  - Clicking the mist's invisible collider sphere in `SecretIsland.jsx` calls `enterSecret()`. It only works in explore mode with the camera settled and no card open.
+  - `enterSecret()` schedules `'revealed'` after `SECRET_SETTLE_MS`, using the same single `settleTimer`. `exitSecret()` flies back to the unchanged `targetIsland`.
+  - `navigateToIsland` also exits the egg. Coming from the egg, it skips its same-target early return, so Nav and the progress dots can fly home to the island the visitor left from.
+  - `canNavigate` in `Scene.jsx` is false while the egg is open. Escape exits it.
+- **Camera:** `CameraController` uses the destination key `'secret'`. Any flight to or from it lasts `SECRET_FLIGHT_MS` instead of `FLIGHT_MS`.
+- **Mist:** about 34 seeded sprites. `THREE.MathUtils.damp` moves a single `mist` amount toward 0 on `'revealed'`/`'solved'`, which disperses the puffs outward and upward, and back toward 1 otherwise, so the mist rolls back in after the visitor leaves. The model mounts only once the store's `loaded` flag is set, so it stays off the critical path.
+- **Audio:** `src/audio/secretTrack.js` holds the player. `playRandomTrack()` is called from `enterSecret()`, which runs inside the click handler. Keep it there: Safari only allows `audio.play()` while a user gesture is on the call stack. The audible start is delayed 2 s (`START_DELAY_MS`): the click does a muted play-then-pause to unlock the element, and a timer starts it for real. The MP3s live in `static/audio/`.
+- **UI:** `SecretOverlay` renders the Back button, the quiz and the confetti. The track title stays hidden until the quiz is solved, because the title track has the album's name. `Confetti` is a dependency-free canvas burst thrown in from all four edges.
+- **Asset pipeline:** the uncompressed source GLB lives in `models-src/`, which is gitignored and kept out of `static/` so it never ships. The served file is `static/models/plastic_beach.glb`, about 2.9 MB, re-encoded with `@gltf-transform/cli`: `resize --width 1024 --height 1024`, then `webp`, then `meshopt`.
+  - Run these as separate steps. Don't use `optimize`, whose join/flatten would destroy the node names `hideNodes` matches.
+  - `hideNodes` uses exact names (`Water_WaterTexture_0`, `pCube138_LongPlanks_0`), because the prefix `Water` would also strip the `WaterRoom*` nodes.
 
 ### CSS
 All design tokens are CSS custom properties on `:root` in `src/styles/index.css`. Fonts are Space Grotesk (body) and Space Mono (monospace/nav/labels), loaded from Google Fonts in `index-react.html`.

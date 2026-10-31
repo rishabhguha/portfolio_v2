@@ -4,6 +4,7 @@ import { ISLANDS } from '../../config/islands.js';
 export default function Nav() {
   const currentIsland = useStore((s) => s.currentIsland);
   const isOverview = useStore((s) => s.isOverview);
+  const secretActive = useStore((s) => s.secretPhase !== 'off');
   const navigateToIsland = useStore((s) => s.navigateToIsland);
 
   return (
@@ -13,7 +14,9 @@ export default function Nav() {
         {ISLANDS.map((island, i) => (
           <li
             key={island.id}
-            className={!isOverview && currentIsland === i ? 'active' : ''}
+            className={
+              !isOverview && !secretActive && currentIsland === i ? 'active' : ''
+            }
             onClick={() => {
               if (!isOverview) navigateToIsland(i);
             }}
