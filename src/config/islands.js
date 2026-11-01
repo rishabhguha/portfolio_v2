@@ -5,7 +5,7 @@
 // ProgressDots, IslandGlow and IslandOverlay now lives here. Array order is the
 // island index used by the store (currentIsland / targetIsland).
 //
-// Structure models are served as `/models/island_<n>.<ext>`, numbered by island
+// Structure models are served as `<base>/models/island_<n>.<ext>`, numbered by island
 // number as the visitor counts them — island 1 is this array's index 0.
 
 export const ISLANDS = [
@@ -36,7 +36,7 @@ export const ISLANDS = [
       surfaceY: 2.27,
       colliderRadius: 7.0, // only used for the (entry-only) click collider
       structureModel: {
-        url: '/models/island_1.glb',
+        url: `${import.meta.env.BASE_URL}models/island_1.glb`,
         // centre-anchored. This model has a shallow underside (a wide disc, not
         // a deep spike), so position.y is set so the red rock band under the
         // grass straddles the waterline instead of the green skirt drowning.
@@ -81,7 +81,7 @@ export const ISLANDS = [
       surfaceY: 2.25, // grass height under the label — tracks position.y
       colliderRadius: 5.2, // only used for the (entry-only) click collider
       structureModel: {
-        url: '/models/island_2.glb',
+        url: `${import.meta.env.BASE_URL}models/island_2.glb`,
         // centre-anchored so the deep underside hangs below the anchor into the
         // sea. yawOffset turns the rocky peaks to the back, so they frame the
         // label and it floats over on open grass in front of the boulders (the
@@ -114,7 +114,7 @@ export const ISLANDS = [
       surfaceY: 4.0, // the ground the label floats over — tune live to the snow surface
       colliderRadius: 5.2, // only used for the (entry-only) click collider
       structureModel: {
-        url: '/models/island_3.gltf',
+        url: `${import.meta.env.BASE_URL}models/island_3.gltf`,
         // centre-anchored so the deep icy underside hangs below the anchor; the
         // group's y is the float height above the sea. position.y /
         // targetDiameter / surfaceY are visual tuning knobs — adjust live in the
@@ -158,7 +158,7 @@ export const ISLANDS = [
       surfaceY: 2.6, // the ground the label floats over — tune to the model's grass top
       colliderRadius: 5.2, // only used for the (entry-only) click collider
       structureModel: {
-        url: '/models/island_4.glb',
+        url: `${import.meta.env.BASE_URL}models/island_4.glb`,
         // centre-anchored so the underside spike hangs below the anchor; the
         // group's y is the float height above the sea. All three of
         // position.y / targetDiameter / surfaceY are visual tuning knobs —

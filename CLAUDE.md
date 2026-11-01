@@ -16,8 +16,13 @@ The original vanilla Three.js implementation lives in `index.html` at the root a
 
 ## Vite setup
 
-- `publicDir` is `static/`, not the default `public/`. Assets are referenced from the web root: `static/models/island_1.glb` → `/models/island_1.glb`.
-- `build.rollupOptions.input.app` in `vite.config.js` is an **absolute machine-specific path** to `index-react.html`. It will break the build on any other machine or CI; make it relative if the build needs to be portable.
+- `publicDir` is `static/`, not the default `public/`. `static/models/island_1.glb` is served at `<base>models/island_1.glb`.
+- `base` is `/` in dev and `/portfolio_v2/` for builds, because GitHub Pages serves the repo under that subpath. Vite rewrites HTML/CSS/import URLs itself, but plain string URLs in JS are not rewritten, so every public-dir URL in config must be written as `` `${import.meta.env.BASE_URL}models/...` ``. A bare `'/models/...'` works in dev and 404s in production.
+- `build.rollupOptions.input.app` resolves `index-react.html` relative to the config file.
+
+## Deployment
+
+`.github/workflows/deploy.yml` builds on every push to `main` and deploys `dist/` to GitHub Pages (repo Settings → Pages → Source must be **GitHub Actions**). The build emits `dist/index-react.html`; the workflow renames it to `index.html` so it is served at the site root. If the repo is renamed or a custom domain is added, update `PAGES_BASE` in `vite.config.js` (`'/'` for a custom domain or a `<user>.github.io` repo).
 
 ## Architecture
 

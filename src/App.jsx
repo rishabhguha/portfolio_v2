@@ -42,7 +42,9 @@ export default function App() {
       <ScrollHint />
       <ProgressDots />
       <SecretOverlay />
-      <TweakPanel />
+      {/* dev-only: import.meta.env.DEV is statically false in builds, so the
+          panel (the only way to enable tweak mode) is tree-shaken out */}
+      {import.meta.env.DEV && <TweakPanel />}
     </>
   )
 }

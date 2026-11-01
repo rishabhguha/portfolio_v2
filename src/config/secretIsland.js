@@ -24,7 +24,7 @@ export const SECRET_ISLAND = {
   // it must stay inside the sea plane (Sea.jsx, edge at ±SEA_SIZE/2 = 500).
   position: { x: -43, z: -420 },
   model: {
-    url: '/models/plastic_beach.glb',
+    url: `${import.meta.env.BASE_URL}models/plastic_beach.glb`,
     // centre-anchored. The model's own waterline sits ~0.4 model units above
     // its bbox centre, so at this scale position.y -0.8 puts the waterline just
     // above the sea's mean level (-0.5) and the stem hangs below the surface.
@@ -46,11 +46,11 @@ export const SECRET_ISLAND = {
   camera: { offset: { x: 16, y: 13, z: 34 }, lookAtY: 7 },
 };
 
-// Local files in static/audio/ (served at /audio/...). One is picked at random.
+// Local files in static/audio/ (served at <base>/audio/...). One is picked at random.
 export const SECRET_TRACKS = [
-  { title: 'Plastic Beach', url: '/audio/plastic-beach.mp3' },
-  { title: 'Empire Ants', url: '/audio/empire-ants.mp3' },
-  { title: 'On Melancholy Hill', url: '/audio/on-melancholy-hill.mp3' },
+  { title: 'Plastic Beach', url: `${import.meta.env.BASE_URL}audio/plastic-beach.mp3` },
+  { title: 'Empire Ants', url: `${import.meta.env.BASE_URL}audio/empire-ants.mp3` },
+  { title: 'On Melancholy Hill', url: `${import.meta.env.BASE_URL}audio/on-melancholy-hill.mp3` },
 ];
 
 // compared case-insensitively, with whitespace trimmed and collapsed
